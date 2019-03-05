@@ -1,0 +1,15 @@
+body {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    font-family: "Ledger";
+    margin:0;
+    padding:0;
+}
+
+.map-container {
+    bottom:0;
+    position:absolute;
+    top:8em;
+    width: 100%;
+}
