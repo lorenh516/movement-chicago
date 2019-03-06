@@ -54,11 +54,11 @@ function plotChi(data) {
   // console.log(populations);
   const rScale = d3.scaleQuantile()
     .domain([aPop.min, wPop.max])
-    .range([1, 3, 5, 7]);
+    .range([2, 4, 6, 8]);
 
-  const popColors = d3.scaleSequential(d3.interpolateBrBG)
-    // .domain([incomeDomain.min, incomeDomain.max])
-    // .range([plotHeight, margin.top]);
+  const popColors = d3.scaleQuantize()
+    .domain([incomeDomain.min, incomeDomain.max])
+    .range(["#dae0e2","#b6c1c5","#92a3a9","#70868d","#4e6973","#2d4f5a"]);
 
 
   var mymap = L.map('map', {
@@ -126,6 +126,37 @@ function plotChi(data) {
 
   var centerpointlayer = L.featureGroup();
 
+  // function tractMarkerOptions(feature, sizeProp, fillProp, strokeProp) {
+  //   console.log(rScale(feature.properties[sizeProp]));
+  //   return {
+  //     radius: rScale(feature.properties[sizeProp]),
+  //     fillColor: popColors(feature.properties[fillProp]),
+  //     color: function(feature) {
+  //     if (feature.properties[strokeProp] > 12140) {
+  //       return "darkgreen";
+  //     } else if (feature.properties[strokeProp] < -121400) {
+  //       return "red"
+  //     } else {
+  //       return "transparent"
+  //     }
+  //   },
+  //   weight: 0.75,
+  //   opacity: 1,
+  //   fillOpacity: 0.5
+  // };
+  // };
+
+  // function onEachTract(feature, sizeProp, colorProp, strokeProp) {
+  //     if (feature.geometry.type == 'Polygon' && feature.properties && feature.properties[sizeProp] && feature.properties[colorProp] && feature.properties[strokeProp]) {
+  //       var bounds = layer.getBounds();
+  //       var center = bounds.getCenter();
+  //       centerpointlayer.addLayer(L.circleMarker([feature.properties.lat,
+  //         feature.properties.long],
+  //         tractMarkerOptions(feature, sizeProp=latinxPop, fillProp=medianIncome, strokeProp=fullPeriodChange)));
+  //   };
+  // };
+
+
   var tractPolys = new L.geoJSON(tractDetails, {
     style: function(feature) {
         switch (feature.properties.predominant_race) {
@@ -136,9 +167,9 @@ function plotChi(data) {
             default: return {color: 'transparent'};
         }
     },
-    fillOpacity: 0.5,
+    fillOpacity: 0.35,
     weight: 0.25,
-    opacity: 0.55,
+    opacity: 0.5,
     filter: yearFilter,
 
     // approximately 5 billion thank you's to GeoJoeK for this centroid
@@ -150,11 +181,15 @@ function plotChi(data) {
        var center = bounds.getCenter();
        centerpointlayer.addLayer(L.circleMarker([feature.properties.lat, feature.properties.long],{
          radius: rScale(feature.properties.latinxPop),
-         color: popColors(feature.properties.medianIncome)
+         color: popColors(feature.properties.medianIncome),
+         weight: 0.75,
+         opacity: 1,
+         fillOpacity: 0.5
        }));
      };
    }
-}).addTo(mymap);
+    // onEachFeature: onEachTract
+  }).addTo(mymap);
 
 centerpointlayer.addTo(mymap);
 // function onEachTract(feature, layer) {
