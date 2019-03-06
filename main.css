@@ -1,5 +1,6 @@
 body {
     align-items: center;
+    background-color: #fffbe6;
     display: flex;
     flex-direction: column;
     font-family: "Ledger";
@@ -11,5 +12,5 @@ body {
     bottom:0;
     position:absolute;
     top:8em;
-    width: 100%;
+    width: 80%;
 }

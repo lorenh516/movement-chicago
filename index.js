@@ -3,6 +3,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   Promise.all([
+      './data/Boundaries - Community Areas (current).geojson',
       './data/tractData.json',
       './data/tractDataGeoms.geojson'
     ].map(url => fetch(url).then(data => data.json())))
@@ -11,8 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`An unexpected error occured: ${error}`);
     });
 });
-
-const mapboxKey = 'pk.eyJ1IjoibGhpbmtzb24iLCJhIjoiY2pzcW52ZnoxMDFyejQ0cGRtZDRtMWppNSJ9.jIRwyua0hfpSpvwjxZcZkQ'
 
 function computeDomain(data, key) {
   return data.reduce((acc, row) => {
@@ -26,7 +25,7 @@ function computeDomain(data, key) {
 
 function plotChi(data) {
   // separate datasets
-  const [tractData, tractDetails] = data;
+  const [communityShapes, tractData, tractDetails] = data;
 
   // define svg dimensions
   const height = 800;
@@ -48,15 +47,28 @@ function plotChi(data) {
     "white": "#30505a"
   }
 
-  const populations = computeDomain(tractData, 'latinxPop');
-  console.log(populations);
-  const rScale = d3.scaleLinear()
-    .domain([populations.min, populations.max])
-    .range([1, 15]);
+  const wPop = computeDomain(tractData, 'whitePop');
+  const aPop = computeDomain(tractData, 'asianPop');
 
-  var mymap = L.map('map').setView(new L.LatLng(41.8500, -87.6298), 10);
+  const incomeDomain = computeDomain(tractData, 'medianIncome');
+  // console.log(populations);
+  const rScale = d3.scaleQuantile()
+    .domain([aPop.min, wPop.max])
+    .range([1, 3, 5, 7]);
 
-  mapboxgl.accessToken = 'pk.eyJ1IjoibGhpbmtzb24iLCJhIjoiY2pzcW52ZnoxMDFyejQ0cGRtZDRtMWppNSJ9.jIRwyua0hfpSpvwjxZcZkQ'; //public key
+  const popColors = d3.scaleSequential(d3.interpolateBrBG)
+    // .domain([incomeDomain.min, incomeDomain.max])
+    // .range([plotHeight, margin.top]);
+
+
+  var mymap = L.map('map', {
+    scrollWheelZoom: false,
+    renderer: L.svg()
+  })
+  .setView(new L.LatLng(41.8500, -87.6298), 10);
+
+  // mapboxgl.accessToken = 'pk.eyJ1IjoibGhpbmtzb24iLCJhIjoiY2pzcW52ZnoxMDFyejQ0cGRtZDRtMWppNSJ9.jIRwyua0hfpSpvwjxZcZkQ'; //public key
+
   var aToken = 'pk.eyJ1IjoibGhpbmtzb24iLCJhIjoiY2pzcW52ZnoxMDFyejQ0cGRtZDRtMWppNSJ9.jIRwyua0hfpSpvwjxZcZkQ'; //public key
   L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -64,6 +76,8 @@ function plotChi(data) {
     id: 'mapbox.light',
     accessToken: aToken
 }).addTo(mymap);
+
+
 
     // var map = new mapboxgl.Map({
 		// 	container: 'map',
@@ -90,7 +104,27 @@ function plotChi(data) {
   //     });
   //
   // });
+  function communityStyle(feature) {
+    return {
+        fillColor: "transparent",
+        weight: 2,
+        opacity: 1,
+        color: "#30505a",  //Outline color
+        fillOpacity: 0
+    };
+}
 
+
+  var communityPolys = new L.geoJSON(communityShapes, {
+    style: communityStyle,
+  }).addTo(mymap);
+
+
+  function yearFilter(feature) {
+    if (feature.properties.id == 2012) return true
+  };
+
+  var centerpointlayer = L.featureGroup();
 
   var tractPolys = new L.geoJSON(tractDetails, {
     style: function(feature) {
@@ -99,22 +133,47 @@ function plotChi(data) {
             case 'Black':   return {color: tractColors.black};
             case 'Asian':   return {color: tractColors.asian};
             case 'White':   return {color: tractColors.white};
+            default: return {color: 'transparent'};
         }
-    }
+    },
+    fillOpacity: 0.5,
+    weight: 0.25,
+    opacity: 0.55,
+    filter: yearFilter,
+
+    // approximately 5 billion thank you's to GeoJoeK for this centroid
+    // onEachFeature idea I was able to adapt from SO:
+    // (https://stackoverflow.com/questions/45626674/leaflet-polygon-center-objects-that-are-useable-by-markercluster)
+    onEachFeature: function(feature,layer){
+     if (feature.geometry.type == 'Polygon' && feature.properties && feature.properties.latinxPop) {
+       var bounds = layer.getBounds();
+       var center = bounds.getCenter();
+       centerpointlayer.addLayer(L.circleMarker([feature.properties.lat, feature.properties.long],{
+         radius: rScale(feature.properties.latinxPop),
+         color: popColors(feature.properties.medianIncome)
+       }));
+     };
+   }
 }).addTo(mymap);
 
-var marker = new L.Marker(tractPolys.getBounds().getCenter()).addTo(map);
-
+centerpointlayer.addTo(mymap);
+// function onEachTract(feature, layer) {
+//   // if (feature.geometry.type = 'Polygon' && feature.properties) {
+//     var bounds = layer.getBounds();
+//     var center = bounds.getCenter();
+//     console.log(center);
+//     centerpointlayer.addLayer(L.circleMarker(center));
+//   };
   //Mapbox + D3 connection
 
 	//Get mapbox basemap container
-	var basemap = mymap.getCanvasContainer();
+	// var basemap = mymap.getCanvasContainer();
 
   //Overlay D3 on the map in an svg
-  var svg = d3.select(basemap)
-    .append("svg")
-    .attr('width', width)
-    .attr('height', height);
+  // var svg = d3.select(basemap)
+  //   .append("svg")
+  //   .attr('width', width)
+  //   .attr('height', height);
 
 
   // Project tract point coordinates to the map's current state
@@ -175,10 +234,7 @@ var marker = new L.Marker(tractPolys.getBounds().getCenter()).addTo(map);
 //     .domain([maxPct, 0])
 //     .range([margin.left, plotWidth])
 //     .nice();
-//   const y = d3.scaleLinear()
-//     .domain([incomeDomain.max, 0])
-//     .range([plotHeight, margin.top])
-//     .nice();
+
 //   const rScale = d3.scaleLinear()
 //     .domain([0, d3.max(data, function(d) {
 //       return d.population; })])
