@@ -165,11 +165,10 @@ function plotChi(data) {
 
   d3.select('#Latinx-radio')
   .attr('checked', true);
+  updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear);
 
-  var baseControl;
-  var overlays;
 
-  const mapUpdate = makeMap(tractData, communityShapes, tractDetails, rScale, baseControl, overlays);
+  const mapUpdate = makeMap(tractData, communityShapes, tractDetails, rScale);
   d3.select('.button-container')
     .selectAll('button')
     .data([2012, 2017])
@@ -191,22 +190,25 @@ function plotChi(data) {
 
 
   function makeMap(tractData, communityShapes, tractDetails, rScale) {
-
+    // initiate scale domains
     const wPop = computeDomain(tractData, 'whitePop');
     const aPop = computeDomain(tractData, 'asianPop');
 
     const incomeDomain = computeDomain(tractData, 'medianIncome');
 
+    // define color scale
     const popColors = d3.scaleQuantize()
       .domain([incomeDomain.min, incomeDomain.max])
       .range(['#f6eff7','#d0d1e6','#a6bddb','#67a9cf','#3690c0','#02818a','#016450']);
 
+    // initiate map object
     var mymap = L.map('map', {
       scrollWheelZoom: false,
       renderer: L.svg()
     })
     .setView(new L.LatLng(41.8400, -87.7000), 10);
 
+    // add Mapbox layer
     var aToken = 'pk.eyJ1IjoibGhpbmtzb24iLCJhIjoiY2pzcW52ZnoxMDFyejQ0cGRtZDRtMWppNSJ9.jIRwyua0hfpSpvwjxZcZkQ'; //public key
     var baseMap = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
       attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -215,27 +217,22 @@ function plotChi(data) {
       accessToken: aToken
   }).addTo(mymap);
 
-
+  // plot Chicago community area polygons as a base layer
   var communityPolys = new L.geoJSON(communityShapes, {
     style: function communityStyle(feature) {
       return {
           fillColor: "transparent",
           weight: 2,
           opacity: 1,
-          color: "#30505a",  //Outline color
+          color: "#30505a",
           fillOpacity: 0
       };
     },
     }).addTo(mymap);
 
-    var baselayers = {
-      "basemap": baseMap,
-      "boundaries": communityPolys
-    }
-
+    // initiate layer groups for overlay layers
     var centerpointlayer = new L.LayerGroup();
     var tracts = new L.LayerGroup();
-
 
     return function updateMap(currentYear, property, radiusScale=rScale, colorScale=popColors, map=mymap) {
 
@@ -246,7 +243,7 @@ function plotChi(data) {
         "white": "#30505a"
       }
 
-      // removeLayer(mymap, baseControl);
+      // add census tract and population circle layers
       addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts)
       };
 
@@ -255,7 +252,10 @@ function plotChi(data) {
     function addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts) {
       console.log("Adding new population layer");
 
-      // centerpointlayer = L.featureGroup();
+      // Attribution for layer removal on update: Leaflet documentation on Layers
+      // https://leafletjs.com/reference-1.4.0.html#layer
+
+      // remove existing non-base layers from map
       tracts.eachLayer(function (layer) {
         map.removeLayer(layer);
       });
@@ -264,6 +264,12 @@ function plotChi(data) {
         map.removeLayer(layer);
       });
 
+      // GeoJSON polygons color switch idea and circlemarker placement
+      // adapted from Leaflet documentation on GeoJSON functionality:
+      // https://leafletjs.com/examples/geojson/
+
+      // add polygons and circle markers for tracts and selected population
+      // group in selected year
       tractPolys = new L.geoJSON(tractDetails, {
         style: function(feature) {
             switch (feature.properties.predominant_race) {
@@ -274,7 +280,7 @@ function plotChi(data) {
                 default: return {color: 'transparent'};
             }
         },
-        fillOpacity: 0.35,
+        fillOpacity: 0.45,
         weight: 0.25,
         opacity: 0.5,
         filter: feature => Number(feature.properties.id) === currentYear,
@@ -282,57 +288,36 @@ function plotChi(data) {
         // approximately 5 billion thank you's to GeoJoeK for this centroid
         // onEachFeature idea I was able to adapt from SO:
         // (https://stackoverflow.com/questions/45626674/leaflet-polygon-center-objects-that-are-useable-by-markercluster)
+
+        // define a point
         onEachFeature: function(feature,layer){
          if (feature.geometry.type == 'Polygon' && feature.properties && feature.properties[property]) {
            var bounds = layer.getBounds();
            var center = bounds.getCenter();
-           L.circleMarker([feature.properties.lat, feature.properties.long],{
+           // console.log(feature)
+           L.circleMarker(center,{
+           // L.circleMarker([feature.properties.lat, feature.properties.long],{
              radius: radiusScale(feature.properties[property]),
              color: colorScale(feature.properties.medianIncome),
              id: feature.properties.GEOID,
              weight: 0.75,
              opacity: 1,
-             fillOpacity: 0.5
+             fillOpacity: 0.5,
+             className: `${feature.properties.GEOID} map-dots`
            }).addTo(centerpointlayer);
          };
        }
 
      });
 
-      var overlays = {
-         "populations": centerpointlayer,
-         "tractsColored": tractPolys
-       };
-
-
+      // add colored tracts to layer group, then add to map
       tracts.addLayer(tractPolys);
-
-      // console.log("checking if tracts")
-      // console.log(map.hasLayer(overlays.tractsColored));
-      // if (map.hasLayer(tractPolys)) {
-      // map.removeLayer(tractPolys);
-      // }
-
-      // console.log("checking if circles")
-      // console.log(map.hasLayer(centerpointlayer));
-
-      // if (map.hasLayer(centerpointlayer)) {
-      // map.removeLayer(centerpointlayer);
-        // remove populations control and add back base control
-      // map.removeControl(populationsControl);
-      // baseCtrl.addTo(map);
-      // }
-
       map.addLayer(tracts);
-      map.addLayer(centerpointlayer);
-      // remove the current control panel
-      // map.removeControl(baseCtrl);
 
-      // populationsControl = L.control.layers(overlays).addTo(map)
+      // add population circle markers to map
+      map.addLayer(centerpointlayer);
 
       };
-
-
 
 function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, property, margin, plotHeight, plotWidth, currentYear) {
   const populationMapping = {
@@ -340,10 +325,10 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
       blackPop: 'Black',
       asianPop: 'Asian',
       whitePop: 'White'
-    }
+    };
 
   const scattered = plotGroup.selectAll('.circle')
-    .data(tractDetails.features.filter( d => d.properties.id == currentYear))
+    .data(tractDetails.features.filter( d => d.properties.id == currentYear));
 
   scattered.enter()
     .append('circle')
@@ -376,7 +361,6 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
               anchor: 'middle'}])
       .attr('transform', `translate(${margin.left/2}, 0)`);
 
-    console.log(`${populationMapping[property]} Population Percentage of Census Tract`)
     xlabel.enter()
       .append('text')
       .merge(xlabel)
@@ -384,161 +368,6 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
       .attr('x', d => d.xlabelx)
       .attr('y', d => d.xlabely)
       .attr('text-anchor', d=> d.anchor)
-      .text(`${populationMapping[property]} Population Percentage of Census Tract`)
-
-
-
-
+      .text(`${populationMapping[property]} Population Percentage of Census Tract`);
 
 };
-
-
-
-// function removeLayer(map, overlays) {
-//   console.log("Removing populations layer");
-//   // map.removeLayer(populations);
-//
-//
-//
-//   if (map.hasLayer(overlays.tractsColored)) {
-//     map.removeLayer(overlays.tractsColored);
-//   };
-//
-//   if (map.hasLayer(overlays.populations)) {
-//     map.removeLayer(overlays.populations);
-//   };
-
-
-
-  // remove populations control and add back base control
-  // map.removeControl(overlaysControl);
-  // baseControl.addTo(map);
-// };
-
-// function tractMarkerOptions(feature, sizeProp, fillProp, strokeProp) {
-//   console.log(rScale(feature.properties[sizeProp]));
-//   return {
-//     radius: rScale(feature.properties[sizeProp]),
-//     fillColor: popColors(feature.properties[fillProp]),
-//     color: function(feature) {
-//     if (feature.properties[strokeProp] > 12140) {
-//       return "darkgreen";
-//     } else if (feature.properties[strokeProp] < -121400) {
-//       return "red"
-//     } else {
-//       return "transparent"
-//     }
-//   },
-//   weight: 0.75,
-//   opacity: 1,
-//   fillOpacity: 0.5
-// };
-// };
-
-// function onEachTract(feature, sizeProp, colorProp, strokeProp) {
-//     if (feature.geometry.type == 'Polygon' && feature.properties && feature.properties[sizeProp] && feature.properties[colorProp] && feature.properties[strokeProp]) {
-//       var bounds = layer.getBounds();
-//       var center = bounds.getCenter();
-//       centerpointlayer.addLayer(L.circleMarker([feature.properties.lat,
-//         feature.properties.long],
-//         tractMarkerOptions(feature, sizeProp=latinxPop, fillProp=medianIncome, strokeProp=fullPeriodChange)));
-//   };
-// };
-
-
-
-
-
-// function onEachTract(feature, layer) {
-//   // if (feature.geometry.type = 'Polygon' && feature.properties) {
-//     var bounds = layer.getBounds();
-//     var center = bounds.getCenter();
-//     console.log(center);
-//     centerpointlayer.addLayer(L.circleMarker(center));
-//   };
-  //Mapbox + D3 connection
-
-	//Get mapbox basemap container
-	// var basemap = mymap.getCanvasContainer();
-
-
-  // Project tract point coordinates to the map's current state
-  // function project(d) {
-  //   return map.project(new mapboxgl.LngLat(d.long, d.lat));
-  // };
-
-  //Project all points in a polygon to map's current state
-  // function projectPoint(lon, lat) {
-  //   var point = map.project(new mapboxgl.LngLat(lon, lat));
-  //   this.stream.point(point.x, point.y);
-  // };
-
-  //Projection function for polygons
-  // var transform = d3.geoTransform({point:projectPoint});
-  // var path = d3.geoPath().projection(transform);
-
-  // var projection = d3.geoMercator(),
-  //   path = d3.geoPath(projection);
-  //
-  // console.log(path([41.974, -87.4003]));
-  //
-  //
-  // var featureElement = svg.selectAll("path")
-	// 	.data(tractData)
-	// 	.enter()
-  //   .append("circle")
-  //   .attr("fill", "red")
-  //   .attr("fill-opacity", 0.4)
-  //   .attr("r", d => rScale(d.latinxPop))
-  //   .classed('circle-increased', d => d.fullPeriodChange > 0)
-  //   .classed('circle-decreased', d => d.fullPeriodChange < 0)
-  //   .classed('predom-black', d => d.predominant_race == 'Black')
-  //   .classed('predom-latinx', d => d.predominant_race == 'Latinx')
-  //   .classed('predom-asian', d => d.predominant_race == 'Asian')
-  //   .classed('predom-white', d => d.predominant_race == 'White');
-
-    // function update() {
-    //     featureElement.attr("d", path);
-    // }
-
-  // max/ min code adapted from textbook (Interactive Data Visualization for
-  // the Web)
-//   const incomeDomain = {
-//     max: d3.max(data, function(d) {
-//     return d.medianIncome;
-//   }),
-//     min: d3.min(data, function(d) {
-//     return d.medianIncome;
-//   })
-// };
-
-//   const maxPct = d3.max(data, function(d) {
-//     return d.latinx_pct;
-//   });
-
-//   const x = d3.scaleLinear()
-//     .domain([maxPct, 0])
-//     .range([margin.left, plotWidth])
-//     .nice();
-
-//   const rScale = d3.scaleLinear()
-//     .domain([0, d3.max(data, function(d) {
-//       return d.population; })])
-//     .range([3, 15]);
-
-
-  // add Axes
-  // svg.append('g')
-  //   .call(d3.axisTop(x))
-  //   .attr('transform', `translate(0, ${margin.top})`);
-  //   // .attr('transform', `translate(0, ${y(Math.ceil(incomeDomain.min / 10000) * 10000)})`);
-  // svg.append('g')
-  //   .call(d3.axisRight(y))
-  //   .attr('transform', `translate(${plotWidth}, 0)`);
-
-
-  // var plotGroup = svg.append("g")
-  //   .attr('id', 'scatterplot')
-
-  // const scattered = plotGroup.selectAll('.circle')
-  //   .data(data);
