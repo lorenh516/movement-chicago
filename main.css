@@ -64,6 +64,7 @@ body {
 }
 
 .chart-container {
+  top: 7em;
   right: 2em;
   position: absolute;
   width: 35%;

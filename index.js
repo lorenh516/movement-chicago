@@ -58,7 +58,8 @@ function plotChi(data) {
   var svg = d3.select('.chart-container')
     .append("svg")
     .attr('width', width)
-    .attr('height', height);
+    .attr('height', height)
+    .attr('fill', '#fffbe6');
 
   const yScale = d3.scaleLinear()
     .domain([incomeDomain.max, 0])
