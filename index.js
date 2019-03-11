@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-
+// As demonstrated by Andrew McNutt in class example code
 function computeDomain(data, key) {
   return data.reduce((acc, row) => {
     return {
@@ -25,7 +25,7 @@ function computeDomain(data, key) {
 
 
 function plotChi(data) {
-  // separate datasets
+  // separate datasets and initiate starting parameters for map and chart
   let currentYear = 2012;
   let mapProperty = 'latinxPop';
   const [communityShapes, tractData, tractDetails] = data;
@@ -34,6 +34,11 @@ function plotChi(data) {
   const height = 400;
   const width = 500;
 
+  const margin = {top: 50, left: 75, right: 25, bottom: 25};
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.bottom - margin.top;
+
+  // calculated domains for scales
   const wPop = computeDomain(tractDetails.features.map(
     feature => {
     return feature.properties;
@@ -44,23 +49,19 @@ function plotChi(data) {
     return feature.properties;
   }), 'asianPop');
 
-
   const incomeDomain = computeDomain(tractDetails.features.map(
     feature => {
     return feature.properties;
     }), 'medianIncome')
 
-  const margin = {top: 50, left: 75, right: 25, bottom: 25};
-  const plotWidth = width - margin.left - margin.right;
-  const plotHeight = height - margin.bottom - margin.top;
 
-  // Initialize an svg
+  // Initialize an svg for scatterplot
   var svg = d3.select('.chart-container')
     .append("svg")
     .attr('width', width)
-    .attr('height', height)
-    .attr('fill', '#fffbe6');
+    .attr('height', height);
 
+  // initialize axis scales for scatterplot
   const yScale = d3.scaleLinear()
     .domain([incomeDomain.max, 0])
     .range([margin.top, plotHeight])
@@ -71,7 +72,7 @@ function plotChi(data) {
     .range([margin.left, plotWidth])
     .nice();
 
-  // add Axes
+  // add Axes to scatterplot
   svg.append('g')
     .call(d3.axisBottom(xScale))
     .attr('transform', `translate(0, ${plotHeight})`)
@@ -82,19 +83,21 @@ function plotChi(data) {
             .attr("transform", function(d) {
                 return "rotate(-65)"
                 });
-    // .attr('transform', `translate(0, ${y(Math.ceil(incomeDomain.min / 10000) * 10000)})`);
+
   svg.append('g')
     .call(d3.axisLeft(yScale))
     .attr('transform', `translate(${margin.left}, 0)`);
 
+  // define group for scatterplot circles
   var plotGroup = svg.append("g")
     .attr('id', 'scatterplot')
 
+  // define scale for scattered and map radii
   const rScale = d3.scaleQuantile()
     .domain([aPop.min, wPop.max])
     .range([2, 4, 6, 8]);
 
-
+  // map populations to data properties
   const propertyMapping = {
       Latinx: 'latinxPop',
       Black: 'blackPop',
@@ -102,8 +105,7 @@ function plotChi(data) {
       White: 'whitePop'
     }
 
-
-    // adding y-axis title
+    // add y-axis title, which does not change
     const ylabel = svg.selectAll('.yaxis')
       .data([{ylabely: 0,
               ylabelx: -plotHeight * 4/7,
@@ -120,7 +122,7 @@ function plotChi(data) {
         .text('Census Tract Median Income')
         .attr('dy', '1em');
 
-    // formatting axis tics to match subtitle
+    // formatting axis tick text to match subtitle
     svg.selectAll('.tick > text')
       .style('font-family', "Roboto");
 
@@ -154,16 +156,14 @@ function plotChi(data) {
       .attr('id', d=> `${d.group}-radio`)
       // merge on property value?
       .merge(clean)
-    .on('click', function(d) {
+      .on('click', function(d) {
 
-      // $(this).siblings("input:radio").attr("disabled","disabled");
-      console.log(propertyMapping[d.group])
       mapProperty = propertyMapping[d.group];
       updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear);
       mapUpdate(currentYear, mapProperty);
     });
-  // updateChart(plotGroup, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth);
 
+  // display Latinx population scatterplot on page load
   d3.select('#Latinx-radio')
   .attr('checked', true);
   updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear);
@@ -181,10 +181,10 @@ function plotChi(data) {
       mapUpdate(currentYear, mapProperty);
       updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear);
     });
+
+  // display earlier time period (2008-2012) and Latinx population map on page
+  // load
   mapUpdate(currentYear, mapProperty);
-
-
-
 
   };
 
@@ -329,6 +329,8 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     };
 
   const scattered = plotGroup.selectAll('.circle')
+    // data filtering adapted from example at bl.ocks.org:
+    // https://bl.ocks.org/fabiomainardi/00fd581dc5ba92d99eec
     .data(tractDetails.features.filter( d => d.properties.id == currentYear));
 
   scattered.enter()
