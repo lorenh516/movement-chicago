@@ -5,3 +5,4 @@ yarn.lock
 data/*
 data
 */.DS_Store
+data/.DS_Store
