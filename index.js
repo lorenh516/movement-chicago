@@ -163,10 +163,8 @@ function plotChi(data) {
     });
   // updateChart(plotGroup, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth);
 
-  // d3.select('#Latinx-radio')
-  // .attr('value', 'on');
-
-
+  d3.select('#Latinx-radio')
+  .attr('checked', true);
 
   var baseControl;
   var overlays;
