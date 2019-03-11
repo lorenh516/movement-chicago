@@ -158,8 +158,8 @@ function plotChi(data) {
       // $(this).siblings("input:radio").attr("disabled","disabled");
       console.log(propertyMapping[d.group])
       mapProperty = propertyMapping[d.group];
-
       updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear);
+      mapUpdate(currentYear, mapProperty);
     });
   // updateChart(plotGroup, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth);
 
