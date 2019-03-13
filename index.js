@@ -318,7 +318,7 @@ function plotChi(data) {
            // console.log(feature)
            tractMarker = L.circleMarker(center,{
            // L.circleMarker([feature.properties.lat, feature.properties.long],{
-             radius: radiusScale(feature.properties[property]),
+             radius: (Number(feature.properties[property]) === 0) ? 0:radiusScale(feature.properties[property]),
              color: colorScale(feature.properties.medianIncome),
              id: feature.properties.GEOID,
              weight: 0.75,
