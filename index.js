@@ -432,7 +432,7 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .append('circle')
     .attr('class', 'circle')
     .merge(scattered)
-    .attr('cx', d => xScale(d.properties[property]))
+    .attr('cx', d => margin.left)
     .attr('cy', d => yScale(d.properties.medianIncome))
     .attr('r', d => (Number(d.properties[property]) === 0) ? 0:rScale(d.properties[property]))
     .attr('id', d => d.properties.GEOID)
@@ -444,7 +444,9 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .classed('circle-decreased', d => d.properties.fullPeriodChange < 0)
     .on("mouseenter", mouseover)
     .on("mousemove", mousemove)
-    .on("mouseleave", mouseleave);
+    .on("mouseleave", mouseleave)
+    .transition().duration(1000)
+    .attr('cx', d => xScale(d.properties[property]));
     // .attr('cx', d => xScale(d.properties.whitePop))
 
     // scattered
