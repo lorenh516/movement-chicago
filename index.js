@@ -197,7 +197,7 @@ function plotChi(data) {
   updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear);
 
 
-  const mapUpdate = makeMap(tractData, communityShapes, tractDetails, rScale, popColors, propertyMapping);
+  const mapUpdate = makeMap(communityShapes, tractDetails, rScale, popColors, propertyMapping);
   d3.select('.button-container')
     .selectAll('button')
     .data([2012, 2017])
@@ -218,7 +218,7 @@ function plotChi(data) {
 
 
 
-  function makeMap(tractData, communityShapes, tractDetails, rScale, popColors, propertyMapping) {
+  function makeMap(communityShapes, tractDetails, rScale, popColors, propertyMapping) {
     // initiate scale domains
 
     // initiate map object
@@ -258,10 +258,10 @@ function plotChi(data) {
     return function updateMap(currentYear, property, radiusScale=rScale, colorScale=popColors, map=mymap, colnames=propertyMapping) {
 
       const tractColors = {
-        "latinx": "#6d7d53",
-        "black": "#9d8e64",
-        "asian": "#986769",
-        "white": "#30505a"
+        "Latinx": "#6d7d53",
+        "Black": "#9d8e64",
+        "Asian": "#986769",
+        "White": "#30505a"
       }
 
       // add census tract and population circle layers
@@ -279,6 +279,7 @@ function plotChi(data) {
       // remove existing non-base layers from map
       tracts.eachLayer(function (layer) {
         map.removeLayer(layer);
+        // layer.setOpacity(0);
       });
 
       centerpointlayer.eachLayer(function (layer) {
@@ -292,15 +293,16 @@ function plotChi(data) {
       // add polygons and circle markers for tracts and selected population
       // group in selected year
       tractPolys = new L.geoJSON(tractDetails, {
-        style: function(feature) {
-            switch (feature.properties.predominant_race) {
-                case 'Latinx': return {color: tractColors.latinx};
-                case 'Black':   return {color: tractColors.black};
-                case 'Asian':   return {color: tractColors.asian};
-                case 'White':   return {color: tractColors.white};
-                default: return {color: 'transparent'};
-            }
-        },
+        // style: function(feature) {
+        //     switch (feature.properties.predominant_race) {
+        //         case 'Latinx': return {color: tractColors.latinx};
+        //         case 'Black':   return {color: tractColors.black};
+        //         case 'Asian':   return {color: tractColors.asian};
+        //         case 'White':   return {color: tractColors.white};
+        //         default: return {color: 'transparent'};
+        //     }
+        // },
+        style: function(feature) { return {color: colorScale(feature.properties.medianIncome)};},
         fillOpacity: 0.45,
         weight: 0.25,
         opacity: 0.5,
@@ -319,7 +321,8 @@ function plotChi(data) {
            tractMarker = L.circleMarker(center,{
            // L.circleMarker([feature.properties.lat, feature.properties.long],{
              radius: (Number(feature.properties[property]) === 0) ? 0:radiusScale(feature.properties[property]),
-             color: colorScale(feature.properties.medianIncome),
+             // color: colorScale(feature.properties.medianIncome),
+             color: tractColors[feature.properties.predominant_race],
              id: feature.properties.GEOID,
              weight: 0.75,
              opacity: 1,
@@ -333,10 +336,10 @@ function plotChi(data) {
            //   .setContent(`Population Group: ${feature.properties[property]}\nTotal Population: ${feature.properties.population}\nMedian Income: ${feature.properties.medianIncome}\nPercentage Non-White: ${1 - feature.properties.white_pct}`)
            //   .openOn(map);
            // });
-           tractMarker.bindPopup(`Total Population: ${feature.properties.population}\nGroup Size: ${feature.properties[property]} (${(100 * (feature.properties[property]/feature.properties.population)).toFixed(2)}%)\nMedian Income: ${feature.properties.medianIncome}\nMedian Income Change: ${feature.properties.fullPeriodChange}\nPct. Non-White: ${(100*(1 - feature.properties.white_pct)).toFixed(2)}%`,
+           tractMarker.bindPopup(`Community Area: ${feature.properties.community}<br>Total Population: ${feature.properties.population}<br>Group Size: ${feature.properties[property]} (${(100 * (feature.properties[property]/feature.properties.population)).toFixed(2)}%)<br>Median Income: ${feature.properties.medianIncome}<br>Income Change: ${(feature.properties.fullPeriodChange/(feature.properties.fullPeriodChange+feature.properties.medianIncome)).toFixed(2)}%<br>Non-White: ${(100*(1 - feature.properties.white_pct)).toFixed(2)}%`,
            {maxWidth: 150,
            minWidth: 50,
-           maxHeight: 100,
+           maxHeight: 150,
            closeButton: false,
           autoPanPadding: L.point(2,2)});
            tractMarker.on('mouseover', function (e) {
@@ -349,6 +352,8 @@ function plotChi(data) {
        }
 
      });
+
+
 
       // add colored tracts to layer group, then add to map
       tracts.addLayer(tractPolys);
@@ -431,7 +436,7 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .attr('cy', d => yScale(d.properties.medianIncome))
     .attr('r', d => (Number(d.properties[property]) === 0) ? 0:rScale(d.properties[property]))
     .attr('id', d => d.properties.GEOID)
-      .classed('predom-black', d => d.properties.predominant_race === 'Black')
+    .classed('predom-black', d => d.properties.predominant_race === 'Black')
     .classed('predom-latinx', d => d.properties.predominant_race === 'Latinx')
     .classed('predom-asian', d => d.properties.predominant_race === 'Asian')
     .classed('predom-white', d => d.properties.predominant_race === 'White')
