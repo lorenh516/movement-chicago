@@ -8,14 +8,6 @@ body {
     padding:0;
 }
 
-.map-container {
-    bottom:2em;
-    left: 4em;
-    position:absolute;
-    width: 55%;
-    height: 77.5%;
-}
-
 .circle {
   opacity: 50%;
   stroke-opacity: 50%;
@@ -23,36 +15,38 @@ body {
 
 .predom-black{
   fill: #9d8e64;
+  color: #9d8e64;
 }
 
 .predom-latinx{
   fill: #6d7d53;
+  color: #6d7d53;
 }
 
 .predom-white{
   fill: #30505a;
+  color: #30505a;
 }
 
 .predom-asian{
   fill: #986769;
-}
-
-
-.interactive-container {
-  /* top:15em; */
-  right: 0;
-  display: flex;
-  flex-direction: row;
-  /* width: 100%; */
+  color: #986769;
 }
 
 .content-container {
-  top:15em;
-  right: 0;
+  /* top:15em; */
+  /* right: 0; */
   display: flex;
   flex-direction: column;
   align-content: center;
+  height: inherit;
   width: 100%;
+  position: relative;
+
+}
+
+.filter-radio {
+  font-size: 2em;
 }
 
 .filters-container {
@@ -63,10 +57,47 @@ body {
   left: 5em;
 }
 
+.interactive-container {
+  /* top:15em; */
+  right: 0;
+  bottom:1em;
+  /* display: flex; */
+  /* flex-direction: row; */
+  /* justify-content: space-around; */
+  height: 80%;
+  width: 100%;
+  display: grid;
+  grid-gap: 5em;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-rows: repeat(1, 500px);
+
+}
+
+.map-container {
+    /* display: flex; */
+    left: 4em;
+    /* padding: 0 0 0 1em; */
+    position:absolute;
+    width: 50%;
+    height: inherit;
+}
+
 .chart-container {
-  top: 7em;
+  /* top: 10em; */
+  display: flex;
+  flex-direction: row;
   right: 2em;
+  height: inherit;
+  /* justify-content: flex-end; */
   position: absolute;
-  width: 35%;
+  width: 40%;
   font-family: "Roboto", sans-serif;
+}
+
+.tooltip {
+  background-color: #E5E5E5;
+  border-color: #B5B5B5;
+  /* position: relative; */
+  /* border-radius: 0.25em; */
+  /* padding: 0.25em; */
 }
