@@ -414,11 +414,19 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
         .style("opacity", 0)
     }
 
+
+  var tractDetailsOverTime = d3.nest()
+    .key(function(d) { return d.properties.GEOID; })
+    .key(function(d) { return d.properties.id; })
+    .entries(tractDetails.features);
+
+  console.log(tractDetailsOverTime);
+
   const scattered = plotGroup.selectAll('.circle')
     // data filtering adapted from example at bl.ocks.org:
     // https://bl.ocks.org/fabiomainardi/00fd581dc5ba92d99eec
     .data(tractDetails.features.filter( d => d.properties.id === currentYear),
-          d => `${d.properties.GEOID}-${d.properties.id}`);
+          d => `${d.properties.GEOID}`);
     // .data(tractDetails.features.filter( d => (d.properties.id === currentYear && d.properties[property] > 0)),
     //       d => d);
     // .data(tractDetails.features.filter( d => (d.properties.id === currentYear && d.properties[property] > 0)),
@@ -426,13 +434,15 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
 
     // idea for adding multiple classes to same selection from benclinkinbeard.com
     // https://benclinkinbeard.com/d3tips/attrclass-vs-classed/
+    // .data(tractDetailsOverTime,
+    //       d => `${d.properties.GEOID}-${d.properties.id}`);
 
 
   scattered.enter()
     .append('circle')
     .attr('class', 'circle')
-    .merge(scattered)
-    .attr('cx', d => margin.left)
+    // .attr('cx', d => margin.left)
+    .attr('cx', d => xScale(d.properties[property]))
     .attr('cy', d => yScale(d.properties.medianIncome))
     .attr('r', d => (Number(d.properties[property]) === 0) ? 0:rScale(d.properties[property]))
     .attr('id', d => d.properties.GEOID)
@@ -444,10 +454,21 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .classed('circle-decreased', d => d.properties.fullPeriodChange < 0)
     .on("mouseenter", mouseover)
     .on("mousemove", mousemove)
-    .on("mouseleave", mouseleave)
-    .transition().duration(1000)
-    .attr('cx', d => xScale(d.properties[property]));
+    .on("mouseleave", mouseleave);
+    // .transition().duration(1000)
+    // .attr('cx', d => xScale(d.properties[property]));
     // .attr('cx', d => xScale(d.properties.whitePop))
+
+
+    scattered
+    .classed('predom-black', d => d.properties.predominant_race === 'Black')
+    .classed('predom-latinx', d => d.properties.predominant_race === 'Latinx')
+    .classed('predom-asian', d => d.properties.predominant_race === 'Asian')
+    .classed('predom-white', d => d.properties.predominant_race === 'White')
+    .transition().duration(1000)
+    .attr('cx', d => xScale(d.properties[property]))
+    .attr('cy', d => yScale(d.properties.medianIncome))
+    .attr('r', d => (Number(d.properties[property]) === 0) ? 0:rScale(d.properties[property]));
 
     // scattered
     //   .attr('class', 'circle')
