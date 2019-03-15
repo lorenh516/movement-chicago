@@ -20,14 +20,18 @@
   <h2>Chicago Population Movement</h2>
   <div class="content-container">
     <div class="filters-container">
-      <p>Select a population group for which to display physical and income mobility between the periods
+      <p class="text-centered">Select a population group for which to display geographic and income mobility between the periods
         2008-2012 and 2013-2017:</p>
       <div class="map-filter"></div>
       <div class="button-container"></div>
     </div>
     <div class="interactive-container">
-      <div class="map-container" id="map"></div>
-      <svg class="chart-container" id="chart"></svg>
+      <div class="chart-div-cont">
+        <div class="map-container" id="map"></div>
+      </div>
+      <div class="chart-div-cont second-one">
+        <svg class="chart-container" id="chart"></svg>
+      </div>
     </div>
   </div>
   <script src="index.js"></script>

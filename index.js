@@ -149,10 +149,16 @@ function plotChi(data) {
       .style('font-family', "Roboto");
 
 
+    // add tooltips
+    var tooltip = d3.select(".chart-div-cont.second-one")
+      .append("div")
+      .attr("class", "tooltip-container")
+      .append("div")
+      // created as transparent so visibility can be triggered by mouseover
+      .style("opacity", 0)
+      .attr("class", "tooltip")
+      .attr("id", "tooltip-inner");
 
-  // MAKE STATE VARIABLE HERE (WHICH ONE IS SELECTED)
-  // var checkedRadio = d3.select('input[name="map-filter-radio"]:checked').value;
-  // console.log(checkedRadio);
 
   // SAVE JOIN FOR INPUTS
   clean = d3.selectAll(".filter-radio")
@@ -187,14 +193,14 @@ function plotChi(data) {
       .on('click', function(d) {
 
       mapProperty = propertyMapping[d.group]['pop'];
-      updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear);
+      updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear, tooltip);
       mapUpdate(currentYear, mapProperty);
     });
 
   // display Latinx population scatterplot on page load
   d3.select('#Latinx-radio')
   .attr('checked', true);
-  updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear);
+  updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear, tooltip);
 
 
   const mapUpdate = makeMap(communityShapes, tractDetails, rScale, popColors, propertyMapping);
@@ -255,7 +261,8 @@ function plotChi(data) {
     var centerpointlayer = new L.LayerGroup();
     var tracts = new L.LayerGroup();
 
-    return function updateMap(currentYear, property, radiusScale=rScale, colorScale=popColors, map=mymap, colnames=propertyMapping) {
+
+    return function updateMap(currentYear, property, radiusScale=rScale, colorScale=popColors, map=mymap, colnames=propertyMapping, yearLayers) {
 
       const tractColors = {
         "Latinx": "#6d7d53",
@@ -268,10 +275,20 @@ function plotChi(data) {
       addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts)
       };
 
+      map.eachLayer(function (layer) {
+        map.removeLayer(layer);
+        // layer.setOpacity(0);
+      });
+
+      tracts.eachLayer(function (layer) {
+        map.removeLayer(layer);
+        // layer.setOpacity(0);
+      });
+
+
     };
 
     function addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts) {
-      console.log("Adding new population layer");
 
       // Attribution for layer removal on update: Leaflet documentation on Layers
       // https://leafletjs.com/reference-1.4.0.html#layer
@@ -317,7 +334,6 @@ function plotChi(data) {
          if (feature.geometry.type == 'Polygon' && feature.properties && feature.properties[property]) {
            var bounds = layer.getBounds();
            var center = bounds.getCenter();
-           // console.log(feature)
            tractMarker = L.circleMarker(center,{
            // L.circleMarker([feature.properties.lat, feature.properties.long],{
              radius: (Number(feature.properties[property]) === 0) ? 0:radiusScale(feature.properties[property]),
@@ -350,21 +366,22 @@ function plotChi(data) {
           });
          };
        }
-
      });
+     // }).addData(tracts);
 
 
 
       // add colored tracts to layer group, then add to map
-      tracts.addLayer(tractPolys);
+      tractPolys.addTo(tracts);
       map.addLayer(tracts);
 
       // add population circle markers to map
       map.addLayer(centerpointlayer);
+      // centerpointlayer.bringToFront()
 
       };
 
-function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, property, margin, plotHeight, plotWidth, currentYear) {
+function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, property, margin, plotHeight, plotWidth, currentYear, tooltip) {
   const populationMapping = {
       latinxPop: 'Latinx',
       blackPop: 'Black',
@@ -372,38 +389,14 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
       whitePop: 'White'
     };
 
-    // add tooltips
-    var tooltip = d3.select("#chart-area")
-      .append("div")
-      // created as transparent so visibility can be triggered by mouseover
-      .style("opacity", 0)
-      .attr("class", "tooltip");
-
-
-    // A function that change this tooltip when the user hover a point.
-    // Its opacity is set to 1: we can now see it. Plus it set the text and position of tooltip depending on the datapoint (d)
-    var mouseover = function(d) {
-      tooltip
-        .transition()
-        .duration(200)
-        // mouseover ==> can see tooltip
-        .style("opacity", 0.75);
-        // .html(`GEOID: ${d.properties.GEOID}`)
-        // .style("left", `${d3.event.pageX}px`)
-        // .style("top", `${d3.event.pageY}px`);
-    }
-
+    // when mouse moves over a circle on chart, nix transparency and add tooltip
+    // info
     var mousemove = function(d) {
-      // console.log(`${d3.mouse(this)[0]}`)
       tooltip
-        .html(`GEOID: ${d.properties.GEOID}`)
-        // .style("left", `${d3.mouse(this)[0]}px`)
-        // .style('left', `${d3.event.pageX}px`)
-        // .style("top", `${d3.event.pageY}px`);
-        // .style('left', '0px')
-        // .style("top", `0px`);
-        .style('left', `${d3.mouse(this)[0]}`)
-        .style("top", `${d3.mouse(this)[1]}`);
+        .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${d.properties.population}<br><b>Group Size:</b> ${d.properties[property]} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${d.properties.medianIncome}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - d.properties.white_pct)).toFixed(2)}%`)
+        .style('opacity', 0.85)
+        .style('left', `${d3.mouse(this)[0]}px`)
+        .style("top", `${d3.mouse(this)[1] + 15}px`);
     }
 
     // A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
@@ -427,16 +420,6 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     // https://bl.ocks.org/fabiomainardi/00fd581dc5ba92d99eec
     .data(tractDetails.features.filter( d => d.properties.id === currentYear),
           d => `${d.properties.GEOID}`);
-    // .data(tractDetails.features.filter( d => (d.properties.id === currentYear && d.properties[property] > 0)),
-    //       d => d);
-    // .data(tractDetails.features.filter( d => (d.properties.id === currentYear && d.properties[property] > 0)),
-    //       d => `${d.properties.GEOID}-${d.properties.id}`);
-
-    // idea for adding multiple classes to same selection from benclinkinbeard.com
-    // https://benclinkinbeard.com/d3tips/attrclass-vs-classed/
-    // .data(tractDetailsOverTime,
-    //       d => `${d.properties.GEOID}-${d.properties.id}`);
-
 
   scattered.enter()
     .append('circle')
@@ -446,13 +429,16 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .attr('cy', d => yScale(d.properties.medianIncome))
     .attr('r', d => (Number(d.properties[property]) === 0) ? 0:rScale(d.properties[property]))
     .attr('id', d => d.properties.GEOID)
+    // Addapted idea for adding multiple classes to same selection with classed
+    // from benclinkinbeard.com:
+    // https://benclinkinbeard.com/d3tips/attrclass-vs-classed/
     .classed('predom-black', d => d.properties.predominant_race === 'Black')
     .classed('predom-latinx', d => d.properties.predominant_race === 'Latinx')
     .classed('predom-asian', d => d.properties.predominant_race === 'Asian')
     .classed('predom-white', d => d.properties.predominant_race === 'White')
     .classed('circle-increased', d => d.properties.fullPeriodChange > 0)
     .classed('circle-decreased', d => d.properties.fullPeriodChange < 0)
-    .on("mouseenter", mouseover)
+    .on("mouseenter", mousemove)
     .on("mousemove", mousemove)
     .on("mouseleave", mouseleave);
     // .transition().duration(1000)
@@ -469,52 +455,6 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .attr('cx', d => xScale(d.properties[property]))
     .attr('cy', d => yScale(d.properties.medianIncome))
     .attr('r', d => (Number(d.properties[property]) === 0) ? 0:rScale(d.properties[property]));
-
-    // scattered
-    //   .attr('class', 'circle')
-    //   .transition().duration(1000)
-    //   .attr('cx', d => xScale(d.properties[property]))
-    //   // .attr('cx', d => xScale(d.properties.whitePop))
-    //   .attr('cy', d => yScale(d.properties.medianIncome))
-    //   .attr('r', d => rScale(d.properties[property]))
-    //   .attr('id', d => d.properties.GEOID)
-    //   // idea for adding multiple classes to same selection from benclinkinbeard.com
-    //   // https://benclinkinbeard.com/d3tips/attrclass-vs-classed/
-    //   .classed('predom-black', d => d.properties.predominant_race === 'Black')
-    //   .classed('predom-latinx', d => d.properties.predominant_race === 'Latinx')
-    //   .classed('predom-asian', d => d.properties.predominant_race === 'Asian')
-    //   .classed('predom-white', d => d.properties.predominant_race === 'White')
-    //   .classed('circle-increased', d => d.properties.fullPeriodChange > 0)
-    //   .classed('circle-decreased', d => d.properties.fullPeriodChange < 0)
-    //   .classed('circle-increased', d => d.properties.fullPeriodChange > 0)
-    //   .classed('circle-decreased', d => d.properties.fullPeriodChange < 0)
-    //   .on("mouseenter", mouseover)
-    //   .on("mousemove", mousemove)
-    //   .on("mouseleave", mouseleave);
-
-    //
-    //   scattered.exit().transition('fill', 'red').duration(200).remove();
-
-  // scattered
-  //   .attr('class', 'circle')
-  //   .transition().duration(1000)
-  //   .attr('cx', d => xScale(d.properties[property]))
-  //   // .attr('cx', d => xScale(d.properties.whitePop))
-  //   .attr('cy', d => yScale(d.properties.medianIncome))
-  //   .attr('r', d => rScale(d.properties[property]))
-  //   .attr('id', d => d.properties.GEOID)
-  //   // idea for adding multiple classes to same selection from benclinkinbeard.com
-  //   // https://benclinkinbeard.com/d3tips/attrclass-vs-classed/
-  //   .classed('predom-black', d => d.properties.predominant_race === 'Black')
-  //   .classed('predom-latinx', d => d.properties.predominant_race === 'Latinx')
-  //   .classed('predom-asian', d => d.properties.predominant_race === 'Asian')
-  //   .classed('predom-white', d => d.properties.predominant_race === 'White')
-  //   .classed('circle-increased', d => d.properties.fullPeriodChange > 0)
-  //   .classed('circle-decreased', d => d.properties.fullPeriodChange < 0)
-  //   .on("mouseover", mouseover)
-  //   .on("mousemove", mousemove)
-  //   .on("mouseleave", mouseleave);
-  //
 
 
     // adding x-axis title
