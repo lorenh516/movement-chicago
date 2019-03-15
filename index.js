@@ -251,7 +251,7 @@ function plotChi(data) {
     // initiate map object
     var mymap = L.map('map', {
       scrollWheelZoom: false,
-      // renderer: L.svg()
+      renderer: L.svg()
     })
     .setView(new L.LatLng(41.8400, -87.7000), 10);
 
@@ -320,18 +320,8 @@ function plotChi(data) {
       // Attribution for layer removal on update: Leaflet documentation on Layers
       // https://leafletjs.com/reference-1.4.0.html#layer
 
-      // centerpointlayer.eachLayer(function (layer) {
-      //   // map.removeLayer(layer);
-      // });
-      //
-      // remove existing non-base layers from map
-      // tracts.eachLayer(function (layer) {
-      // //   map.removeLayer(layer);
-      // });
-
       centerpointlayer.clearLayers();
       tracts.clearLayers();
-
 
       // GeoJSON polygons color switch idea and circlemarker placement
       // adapted from Leaflet documentation on GeoJSON functionality:
@@ -349,7 +339,7 @@ function plotChi(data) {
                 default: return {color: 'transparent'};
             }
         },
-          // style: function(feature) { return {color: colorScale(feature.properties.medianIncome)};},
+        // style: function(feature) { return {color: colorScale(feature.properties.medianIncome)};},
         // color: feature => tractColors[feature.properties.predominant_race],
         // style: function(feature) { return {color: tractColors[feature.properties.predominant_race]};},
         fillOpacity: 0.45,
@@ -361,15 +351,7 @@ function plotChi(data) {
         // onEachFeature idea I was able to adapt from SO:
         // (https://stackoverflow.com/questions/45626674/leaflet-polygon-center-objects-that-are-useable-by-markercluster)
 
-
-        // tractMarker.on('mouseover', function(e){
-        //   var mapTooltip = L.tooltip()
-        //   .setLatLng(e.latlng)
-        //   .setContent(`Population Group: ${feature.properties[property]}\nTotal Population: ${feature.properties.population}\nMedian Income: ${feature.properties.medianIncome}\nPercentage Non-White: ${1 - feature.properties.white_pct}`)
-        //   .openOn(map);
-        // });
-
-        // define a point
+        // define a tract marker at the center of every tract
         onEachFeature: function(feature,layer){
          if (feature.geometry.type == 'Polygon' && feature.properties && feature.properties[property]) {
            var bounds = layer.getBounds();
@@ -423,30 +405,17 @@ function plotChi(data) {
 
           }).addTo(centerpointlayer);
 
-          // centerpointlayer.addLayer(tractMarker);
-          // tractMarker.addLayer(centerpointlayer);
-
          };
        }
      });
-     // }).addData(tracts);
 
-      // console.log(map.getPane('mapDots'));
 
       // add colored tracts to layer group, then add to map
       tracts.addLayer(tractPolys);
-      // tractPolys.addLayer(tracts);
       tracts.addTo(map);
-      // map.addLayer(tracts);
 
       // add population circle markers to map
-      // centerpointlayer.addTo(map.getPane('mapDots'));
       centerpointlayer.addTo(map);
-      // map.addLayer(centerpointlayer);
-      // centerpointlayer.bringToFront()
-      // centerpointlayer.eachLayer(function (layer) {
-      // //   layer.bringToFront();
-      // });
 
       };
 
