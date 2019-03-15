@@ -279,9 +279,9 @@ function plotChi(data) {
     }).addTo(mymap);
 
     mymap.createPane('mapDots');
-    // based on Leaflet defaults, 650 z-index should be above all tiles but
+    // based on Leaflet defaults, 625 z-index should be above all tiles but
     // below tooltips
-    mymap.getPane('mapDots').style.zIndex = 650;
+    mymap.getPane('mapDots').style.zIndex = 625;
 
     // initiate layer groups for overlay layers
     var centerpointlayer = new L.LayerGroup();
@@ -368,9 +368,9 @@ function plotChi(data) {
              // learned where to pass custom panes from GIS Stack Exchange:
              // https://gis.stackexchange.com/questions/181870/draw-l-circle-in-a-custom-pane
              pane:'mapDots',
-             className: `${feature.properties.GEOID} map-dots circle`
+             className: `tract-${feature.properties.GEOID} map-dots`
            })
-           .bindTooltip(`Community Area: ${feature.properties.community}<br>Total Population: ${feature.properties.population}<br>Group Size: ${feature.properties[property]} (${(100 * (feature.properties[property]/feature.properties.population)).toFixed(2)}%)<br>Median Income: ${feature.properties.medianIncome}<br>Income Change: ${(feature.properties.fullPeriodChange/(feature.properties.fullPeriodChange+feature.properties.medianIncome)).toFixed(2)}%<br>Non-White: ${(100*(1 - feature.properties.white_pct)).toFixed(2)}%`,
+           .bindTooltip(`<b>Community Area:</b> ${feature.properties.community}<br><b>Total Population:</b> ${feature.properties.population}<br><b>Group Size:</b> ${feature.properties[property]} (${(100 * (feature.properties[property]/feature.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${feature.properties.medianIncome}<br><b>Income Change:</b> ${(feature.properties.fullPeriodChange/(feature.properties.fullPeriodChange+feature.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - feature.properties.white_pct)).toFixed(2)}%`,
              {maxWidth: 150,
               minWidth: 50,
               maxHeight: 150,
@@ -381,13 +381,16 @@ function plotChi(data) {
            tractMarker.on('mouseover', function (e) {
                this.openTooltip();
 
-               this.setStyle({
-                 weight: 3,
-                 fillOpacity: 1,
-                 // fillColor: tractColors[feature.properties.predominant_race],
-                 color: '#edb834',
-                 opacity: 1
-             });
+               classGEOID = `tract-${feature.properties.GEOID}`;
+               d3.selectAll(`.${classGEOID}`).classed('active', true);
+    
+             //   this.setStyle({
+             //     weight: 3,
+             //     fillOpacity: 1,
+             //     // fillColor: tractColors[feature.properties.predominant_race],
+             //     color: '#edb834',
+             //     opacity: 1
+             // });
 
              // this.bringToFront();
            });
@@ -395,34 +398,48 @@ function plotChi(data) {
            tractMarker.on('mouseout', function (e) {
 
              this.closeTooltip();
-             // this.resetStyle(e.layer);
-             // tractMarker.resetStyle(e.layer);
-             // e.layer.resetStyle(tractMarker);
-             // layer.resetStyle(tractMarker);
-             // layer.resetStyle(tractMarker);
-             this.setStyle({
+
+             classGEOID = `tract-${feature.properties.GEOID}`;
+             d3.selectAll(`.${classGEOID}`).classed('active', false);
+             // this.setForceZIndex(625);
+
+             // this.setStyle({
+             //  fillColor: colorScale(feature.properties.medianIncome),
+             //  color: colorScale(feature.properties.medianIncome),
+             //  weight: 0.75,
+             //  opacity: 1,
+             //  fillOpacity: 0.65
               // color: tractColors[feature.properties.predominant_race],
-              color: colorScale(feature.properties.medianIncome),
-              weight: 0.75,
-              opacity: 1,
-              fillOpacity: 0.65,
-              fillColor: colorScale(feature.properties.medianIncome)
               // fillColor: tractColors[feature.properties.predominant_race]
-            });
-          }).addTo(centerpointlayer);
+            // });
+          });
+
+          tractMarker.on('click', function (e) {
+
+            classGEOID = `tract-${feature.properties.GEOID}`;
+            // d3.selectAll(`.${classGEOID}`).classed('active-hold', false);
+
+            selected = d3.selectAll(`.${classGEOID}`)
+            selected.classed('active-hold', !selected.classed('active-hold'));
+
+            // this.setForceZIndex(625);
+            // this.setStyle({
+            //  fillColor: colorScale(feature.properties.medianIncome),
+            //  color: colorScale(feature.properties.medianIncome),
+            //  weight: 0.75,
+            //  opacity: 1,
+            //  fillOpacity: 0.65
+             // color: tractColors[feature.properties.predominant_race],
+             // fillColor: tractColors[feature.properties.predominant_race]
+           // });
+         });
+
+          tractMarker.addTo(centerpointlayer);
 
          };
        }
      });
 
-     function resetHighlight(e) {
-               tractPolys.resetStyle(e.target);
-           }
-
-      function resetHighlight(e) {
-         var layer = e.target;
-         layer.setStyle(StyleDefault);
-     }
 
       // add colored tracts to layer group, then add to map
       tracts.addLayer(tractPolys);
@@ -446,9 +463,11 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     var mousemove = function(d) {
       d3.selectAll('.circle.active')
         .classed('active', false)
+      d3.selectAll('.map-dots.active')
+        .classed('active', false)
       d3.select(this).classed('active', d => d);
-      // classGEOID = d.properties.GEOID
-      // d3.selectAll(`.${classGEOID}`).classed('active', d => d);
+      classGEOID = `tract-${d.properties.GEOID}`;
+      d3.selectAll(`.${classGEOID}`).classed('active', true);
 
       tooltip
         .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${d.properties.population}<br><b>Group Size:</b> ${d.properties[property]} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${d.properties.medianIncome}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - d.properties.white_pct)).toFixed(2)}%`)
@@ -462,6 +481,10 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     // clear active status and make tooltip transparent when leaving a circle
     var mouseleave = function(d) {
       d3.select(this).classed('active', false);
+
+      classGEOID = `tract-${d.properties.GEOID}`;
+      d3.selectAll(`.${classGEOID}`).classed('active', false);
+
       tooltip
         .transition()
         .duration(200)
@@ -471,10 +494,15 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
 
     // highlight/ remove highlight on a circle with a click
     var mouseclick = function(d) {
-      selected = d3.select(this)
+      // selected = d3.select(this)
       // Attribution for class-flipping:
       // https://jaketrent.com/post/d3-class-operations/
+      // selected.classed('active-hold', !selected.classed('active-hold'));
+
+      classGEOID = `tract-${d.properties.GEOID}`;
+      selected = d3.selectAll(`.${classGEOID}`)
       selected.classed('active-hold', !selected.classed('active-hold'));
+
     }
 
 
@@ -486,7 +514,7 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
 
   scattered.enter()
     .append('circle')
-    .attr('class', d => d.properties.GEOID)
+    .attr('class', d => `tract-${d.properties.GEOID}`)
     // .attr('cx', d => margin.left)
     .classed('circle', true)
     .attr('cx', d => xScale(d.properties[property]))
