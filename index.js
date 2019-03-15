@@ -302,15 +302,15 @@ function plotChi(data) {
       addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts)
       };
 
-      map.eachLayer(function (layer) {
-        map.removeLayer(layer);
-        // layer.setOpacity(0);
-      });
-
-      tracts.eachLayer(function (layer) {
-        map.removeLayer(layer);
-        // layer.setOpacity(0);
-      });
+      // map.eachLayer(function (layer) {
+      //   map.removeLayer(layer);
+      //   // layer.setOpacity(0);
+      // });
+      //
+      // tracts.eachLayer(function (layer) {
+      //   map.removeLayer(layer);
+      //   // layer.setOpacity(0);
+      // });
 
 
     };
@@ -369,12 +369,14 @@ function plotChi(data) {
              // https://gis.stackexchange.com/questions/181870/draw-l-circle-in-a-custom-pane
              pane:'mapDots',
              className: `${feature.properties.GEOID} map-dots circle`
-           }).bindTooltip(`Community Area: ${feature.properties.community}<br>Total Population: ${feature.properties.population}<br>Group Size: ${feature.properties[property]} (${(100 * (feature.properties[property]/feature.properties.population)).toFixed(2)}%)<br>Median Income: ${feature.properties.medianIncome}<br>Income Change: ${(feature.properties.fullPeriodChange/(feature.properties.fullPeriodChange+feature.properties.medianIncome)).toFixed(2)}%<br>Non-White: ${(100*(1 - feature.properties.white_pct)).toFixed(2)}%`,
-           {maxWidth: 150,
-            minWidth: 50,
-            maxHeight: 150,
-            closeButton: false,
-            autoPanPadding: L.point(2,2)});
+           })
+           .bindTooltip(`Community Area: ${feature.properties.community}<br>Total Population: ${feature.properties.population}<br>Group Size: ${feature.properties[property]} (${(100 * (feature.properties[property]/feature.properties.population)).toFixed(2)}%)<br>Median Income: ${feature.properties.medianIncome}<br>Income Change: ${(feature.properties.fullPeriodChange/(feature.properties.fullPeriodChange+feature.properties.medianIncome)).toFixed(2)}%<br>Non-White: ${(100*(1 - feature.properties.white_pct)).toFixed(2)}%`,
+             {maxWidth: 150,
+              minWidth: 50,
+              maxHeight: 150,
+              closeButton: false,
+              autoPanPadding: L.point(2,2)
+          });
 
            tractMarker.on('mouseover', function (e) {
                this.openTooltip();
@@ -387,12 +389,17 @@ function plotChi(data) {
                  opacity: 1
              });
 
-             this.bringToFront();
+             // this.bringToFront();
            });
 
            tractMarker.on('mouseout', function (e) {
-             this.closeTooltip();
 
+             this.closeTooltip();
+             // this.resetStyle(e.layer);
+             // tractMarker.resetStyle(e.layer);
+             // e.layer.resetStyle(tractMarker);
+             // layer.resetStyle(tractMarker);
+             // layer.resetStyle(tractMarker);
              this.setStyle({
               // color: tractColors[feature.properties.predominant_race],
               color: colorScale(feature.properties.medianIncome),
@@ -402,13 +409,20 @@ function plotChi(data) {
               fillColor: colorScale(feature.properties.medianIncome)
               // fillColor: tractColors[feature.properties.predominant_race]
             });
-
           }).addTo(centerpointlayer);
 
          };
        }
      });
 
+     function resetHighlight(e) {
+               tractPolys.resetStyle(e.target);
+           }
+
+      function resetHighlight(e) {
+         var layer = e.target;
+         layer.setStyle(StyleDefault);
+     }
 
       // add colored tracts to layer group, then add to map
       tracts.addLayer(tractPolys);
