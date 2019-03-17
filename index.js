@@ -383,16 +383,14 @@ function plotChi(data) {
 
                classGEOID = `tract-${feature.properties.GEOID}`;
                d3.selectAll(`.${classGEOID}`).classed('active', true);
-    
-             //   this.setStyle({
-             //     weight: 3,
-             //     fillOpacity: 1,
-             //     // fillColor: tractColors[feature.properties.predominant_race],
-             //     color: '#edb834',
-             //     opacity: 1
-             // });
 
-             // this.bringToFront();
+               // make non-focus circles/ map dots more transparent
+               // Adapted from: https://stackoverflow.com/questions/45616574/d3-selectall-multiple-classes-and-or-or
+               var focusCircle = this;
+               d3.selectAll('.circle,.map-dots').classed('inactive',function () {
+                   return (this === focusCircle) ? false:true;
+               });
+
            });
 
            tractMarker.on('mouseout', function (e) {
@@ -401,17 +399,10 @@ function plotChi(data) {
 
              classGEOID = `tract-${feature.properties.GEOID}`;
              d3.selectAll(`.${classGEOID}`).classed('active', false);
-             // this.setForceZIndex(625);
 
-             // this.setStyle({
-             //  fillColor: colorScale(feature.properties.medianIncome),
-             //  color: colorScale(feature.properties.medianIncome),
-             //  weight: 0.75,
-             //  opacity: 1,
-             //  fillOpacity: 0.65
-              // color: tractColors[feature.properties.predominant_race],
-              // fillColor: tractColors[feature.properties.predominant_race]
-            // });
+             allDots = d3.selectAll('.circle,.map-dots')
+             allDots.classed('inactive', false);
+
           });
 
           tractMarker.on('click', function (e) {
@@ -422,16 +413,6 @@ function plotChi(data) {
             selected = d3.selectAll(`.${classGEOID}`)
             selected.classed('active-hold', !selected.classed('active-hold'));
 
-            // this.setForceZIndex(625);
-            // this.setStyle({
-            //  fillColor: colorScale(feature.properties.medianIncome),
-            //  color: colorScale(feature.properties.medianIncome),
-            //  weight: 0.75,
-            //  opacity: 1,
-            //  fillOpacity: 0.65
-             // color: tractColors[feature.properties.predominant_race],
-             // fillColor: tractColors[feature.properties.predominant_race]
-           // });
          });
 
           tractMarker.addTo(centerpointlayer);
@@ -460,7 +441,7 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
 
     // when mouse moves over a circle on chart, nix transparency, add tooltip
     // info, and mark "active"
-    var mousemove = function(d) {
+    var mouseenter = function(d) {
       d3.selectAll('.circle.active')
         .classed('active', false)
       d3.selectAll('.map-dots.active')
@@ -468,6 +449,30 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
       d3.select(this).classed('active', d => d);
       classGEOID = `tract-${d.properties.GEOID}`;
       d3.selectAll(`.${classGEOID}`).classed('active', true);
+
+      // make non-focus circles/ map dots more transparent
+      // Adapted from: https://stackoverflow.com/questions/45616574/d3-selectall-multiple-classes-and-or-or
+      var focusCircle = this;
+      d3.selectAll('.circle,.map-dots').classed('inactive',function () {
+          return (this === focusCircle) ? false:true;
+      });
+
+      tooltip
+        .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${d.properties.population}<br><b>Group Size:</b> ${d.properties[property]} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${d.properties.medianIncome}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - d.properties.white_pct)).toFixed(2)}%`)
+        .style('opacity', 0.85)
+        // .style('color', populationMapping[property]['color'])
+        .style('left', `${d3.mouse(this)[0]}px`)
+        .style("top", `${d3.mouse(this)[1] + 15}px`);
+    }
+
+    var mousemove = function(d) {
+      // d3.selectAll('.circle.active')
+      //   .classed('active', false)
+      // d3.selectAll('.map-dots.active')
+      //   .classed('active', false)
+      // d3.select(this).classed('active', d => d);
+      // classGEOID = `tract-${d.properties.GEOID}`;
+      // d3.selectAll(`.${classGEOID}`).classed('active', true);
 
       tooltip
         .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${d.properties.population}<br><b>Group Size:</b> ${d.properties[property]} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${d.properties.medianIncome}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - d.properties.white_pct)).toFixed(2)}%`)
@@ -485,6 +490,9 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
       classGEOID = `tract-${d.properties.GEOID}`;
       d3.selectAll(`.${classGEOID}`).classed('active', false);
 
+      allDots = d3.selectAll('.circle,.map-dots')
+      allDots.classed('inactive', false);
+
       tooltip
         .transition()
         .duration(200)
@@ -497,8 +505,6 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
       // selected = d3.select(this)
       // Attribution for class-flipping:
       // https://jaketrent.com/post/d3-class-operations/
-      // selected.classed('active-hold', !selected.classed('active-hold'));
-
       classGEOID = `tract-${d.properties.GEOID}`;
       selected = d3.selectAll(`.${classGEOID}`)
       selected.classed('active-hold', !selected.classed('active-hold'));
@@ -530,7 +536,7 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .classed('predom-white', d => d.properties.predominant_race === 'White')
     .classed('circle-increased', d => d.properties.fullPeriodChange > 0)
     .classed('circle-decreased', d => d.properties.fullPeriodChange < 0)
-    .on("mouseenter", mousemove)
+    .on("mouseenter", mouseenter)
     .on("mousemove", mousemove)
     .on("mouseleave", mouseleave)
     .on("click", mouseclick);
