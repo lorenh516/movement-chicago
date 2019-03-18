@@ -119,7 +119,10 @@ html, body {
   margin-left: 1em;
 }
 
-
+.legendSize {
+  font-size: 0.75em;
+  font-family: "Roboto";
+}
 
 .chart-container {
   display: flex;
@@ -168,25 +171,36 @@ html, body {
   /* Button state shadowing adapted from:
   https://codepen.io/LeoPragi/pen/gzrGoG
   https://speckyboy.com/create-stylish-css-buttons/  */
+
+  /* Adapted some CSS from https://fdossena.com/?p=html5cool/buttons/i.frag
+  to make my buttons look more button-y @AMcN */
   margin: 0 0 0 1em;
   background-color: #F1F1F1;
-  border: none;
-  border-radius: 0.25em;
+  display:inline-block;
+  box-sizing: border-box;
+  border-radius:0.25em;
   font-family: "Roboto", sans-serif;
-  font-size: 0.85em;
-  box-shadow: inset 0 0 0 0.03em #6c6464
+  /* font-size: 0.85em; */
+  padding: 0.4em 1em 0.55em 1em;
+  box-shadow: inset 0 -0.55em 0 -0.35em #d1cfcf;
+  text-align:center;
+  position:relative;
 }
 
 .button:hover,
 .button.hover {
   background-color: #a8a8a8;
-  box-shadow: 0 0.02em 0.6em #6c6464;
-  transform: translateY(-3px);
+  box-shadow: 0.75 0.35em 0.20em #6c6464;
+  /* transform: translateY(-1px); */
+  border: #fff;
+  border-width: 3;
 }
 
 .button:active,
 .button.active {
-  box-shadow: inset 0 0 0 0.03em #6c6464,inset 0 0.06em 0.5em #193047;
+  box-shadow: inset 0 0 0 0.05em #6c6464,inset 0 0.10em 0.5em #193047;
+  border-width: 1.5;
+  top:0.1em;
 }
 
 .button.clicked {
@@ -204,7 +218,7 @@ https://www.w3schools.com/cssref/tryit.asp?filename=trycss_sel_after,
 adapted into my '::before' code */
 label::before {
   content: "●";
-  margin-right: 0.25em;
+  margin-right: 0.5em;
 }
 
 .xaxis,
@@ -226,7 +240,7 @@ label::before {
 
 .circle.inactive,
 .map-dots.inactive {
-  opacity: 0.35;
+  opacity: 0.5;
   stroke-opacity: 0.5;
 }
 
@@ -237,6 +251,8 @@ label::before {
   color: #edb834;
   /* stroke: #810000; */
   /* fillColor: #edb834; */
+  stroke: #fff;
+  stroke-width: 1.5;
   fill-opacity: 1;
   opacity: 1;
   stroke-opacity: 1;
@@ -270,10 +286,10 @@ label::before {
 
 .title {
   font-family: "Ledger";
-  font-size: 0.9em
+  font-size: 0.9em;
 }
 
 .subtitle {
   font-family: "Ledger";
-  font-size: 0.75em;
+  font-size: 0.8em;
 }

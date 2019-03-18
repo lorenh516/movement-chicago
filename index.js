@@ -43,11 +43,13 @@ function plotChi(data) {
     feature => {
     return feature.properties;
   }), 'whitePop');
+  console.log(wPop.max);
 
   const aPop = computeDomain(tractDetails.features.map(
     feature => {
     return feature.properties;
   }), 'asianPop');
+  console.log(aPop.min);
 
   const incomeDomain = computeDomain(tractDetails.features.map(
     feature => {
@@ -94,9 +96,17 @@ function plotChi(data) {
     .attr('id', 'scatterplot')
 
   // define scale for scattered and map radii
-  const rScale = d3.scaleQuantile()
+  // const rScale = d3.scaleQuantile()
+  //   .domain([aPop.min, wPop.max])
+  //   .range([2, 4, 6, 8]);
+
+  // const rScale = d3.scaleLinear()
+  //   .domain([aPop.min, wPop.max])
+  //   .range([2, 15]);
+
+  const rScale = d3.scaleSqrt()
     .domain([aPop.min, wPop.max])
-    .range([2, 4, 6, 8]);
+    .range([2, 8]).nice();
 
   const source = svg.selectAll('.caption')
     .data([{x: plotWidth - (1.75 * margin.left) - margin.right,
@@ -202,24 +212,39 @@ function plotChi(data) {
     svg.selectAll('.tick > text')
       .style('font-family', "Roboto");
 
+    // adding a size legend for group population size
+    // Adapted from example at https://d3-legend.susielu.com/#Size
+    svg.append("g")
+    .attr("class", "legendSize")
+    .attr("transform", `translate(${plotWidth * 2/3}, ${margin.top * 1.25})`);
+
+    var chartSizeLegend = d3.legendSize()
+      .scale(rScale)
+      .labelFormat(d3.format(",d"))
+      .shape('circle')
+      .title("Group Population in Tract")
+      .titleWidth(200)
+      .shapePadding(5)
+      .labelOffset(10);
+
+    svg.select(".legendSize")
+      .call(chartSizeLegend);
+
+
+    // adding a color legend for income level
+    // Adapted from example at https://d3-legend.susielu.com/#color
     var mapSVG = d3.select('.map-legend-cont')
       .append("svg")
-      // .attr("width", 150)
-      // .attr("height", 150)
       .attr("width", '100%')
       .attr("height", '30%')
-      // .attr('viewBox','0 0 '+Math.min(width,height)+' '+Math.min(width,height))
       .attr('preserveAspectRatio','xMinYMin')
-      // .attr("transform", `translate(0,${margin.top * 1/8})`)
       .attr('id', 'map-legend');
 
     mapSVG.append("g")
     .attr("class", "colorLegend")
-    // .attr("transform", `translate(${Math.min(width,height) * 1.1}, ${Math.min(width,height) * 5/7})`);
     .attr("transform", `translate(10,${margin.top/2})`);
 
   var mapLegend = d3.legendColor()
-    // .labelFormat(d3.format(",r"))
     .labels(['0 - 24,999',
              '25,000 - 49,999',
              '50,000 - 99,999',
@@ -247,6 +272,14 @@ function plotChi(data) {
       .attr("class", "tooltip")
       .attr("id", "tooltip-inner");
 
+  //
+  // var radioSVG = d3.selectAll(".map-filter")
+  //                   .append('svg')
+  //                   .attr("id", "radio-svg")
+  //                   .attr('width', '100%')
+  //
+  // radioSVG.append('g')
+  //   .attr('id', 'population-filters')
 
   // SAVE JOIN FOR INPUTS
   clean = d3.selectAll(".filter-radio")
@@ -256,15 +289,21 @@ function plotChi(data) {
              {'group': 'White', 'value': 'off'},
              {'group': 'Asian', 'value': 'off'}])
 
+    // TO DO: create this setup with D3
+    // <div class="seleceted">
+    //   <div></div> // height width = 10, border-radius: 100%
+    //   <button >LATINX</button>
+    // </div>
 
-  d3.select('.map-filter')
-    .selectAll('input')
-    .data([{'group': 'Latinx', 'value': 'off'},
-           {'group': 'Black', 'value': 'off'},
-           {'group': 'White', 'value': 'off'},
-           {'group': 'Asian', 'value': 'off'}])
+    d3.select('.map-filter')
+      .selectAll('input')
+      .data([{'group': 'Latinx', 'value': 'off'},
+             {'group': 'Black', 'value': 'off'},
+             {'group': 'White', 'value': 'off'},
+             {'group': 'Asian', 'value': 'off'}])
     .enter()
-    .append('div')//flex this guy
+    // flex this guy
+    // .append('div')
     // .append('div')
     // figure out how to make anotoher div that's a sibling of label (google)
     // make this sibling div contain the dot
@@ -289,6 +328,10 @@ function plotChi(data) {
       updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear, tooltip);
       mapUpdate(currentYear, mapProperty);
     });
+
+    // radioSVG.select("g.parent").data(['a','b'])
+    // .insert("div", "label")
+    //  .text(d => "⬤");
 
   // display Latinx population scatterplot on page load
   d3.select('#Latinx-radio')
@@ -458,6 +501,7 @@ function plotChi(data) {
            // tractMarker = L.circleMarker(center,{
            tractMarker = L.circleMarker([feature.properties.lat, feature.properties.long],{
              radius: (Number(feature.properties[property]) === 0) ? 0:radiusScale(feature.properties[property]),
+             // radius: radiusScale(feature.properties[property]),
              color: colorScale(feature.properties.medianIncome),
              // color: tractColors[feature.properties.predominant_race],
              weight: 0.75,
@@ -595,7 +639,7 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
       // d3.selectAll(`.${classGEOID}`).classed('active', true);
 
       tooltip
-        .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${numCommas(d.properties.population)}<br><b>Group Size:</b> ${numCommas(d.properties[property])} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${numCommas(d.properties.medianIncome)}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 -d.properties.white_pct)).toFixed(2)}%`)
+        .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${numCommas(d.properties.population)}<br><b>Group Size:</b> ${numCommas(d.properties[property])} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${numCommas(d.properties.medianIncome)}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - d.properties.white_pct)).toFixed(2)}%`)
         // .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${d.properties.population}<br><b>Group Size:</b> ${d.properties[property]} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${d.properties.medianIncome}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - d.properties.white_pct)).toFixed(2)}%`)
         .style('opacity', 0.85)
         // .style('color', populationMapping[property]['color'])
@@ -646,6 +690,7 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .classed('circle', true)
     .attr('cx', d => xScale(d.properties[property]))
     .attr('cy', d => yScale(d.properties.medianIncome))
+    // .attr('r', d => rScale(d.properties[property]))
     .attr('r', d => (Number(d.properties[property]) === 0) ? 0:rScale(d.properties[property]))
     .attr('id', d => d.properties.GEOID)
     // Addapted idea for adding multiple classes to same selection with classed
@@ -665,6 +710,10 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
 
 
     scattered
+    .on("mouseenter", mouseenter)
+    .on("mousemove", mousemove)
+    .on("mouseleave", mouseleave)
+    .on("click", mouseclick)
     .classed('predom-black', d => d.properties.predominant_race === 'Black')
     .classed('predom-latinx', d => d.properties.predominant_race === 'Latinx')
     .classed('predom-asian', d => d.properties.predominant_race === 'Asian')
@@ -672,12 +721,16 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .transition().duration(1000)
     .attr('cx', d => xScale(d.properties[property]))
     .attr('cy', d => yScale(d.properties.medianIncome))
+    // .attr('r', d => rScale(d.properties[property]));
     .attr('r', d => (Number(d.properties[property]) === 0) ? 0:rScale(d.properties[property]));
-
+    // .on("mouseenter", mouseenter)
+    // .on("mousemove", mousemove)
+    // .on("mouseleave", mouseleave)
+    // .on("click", mouseclick);
 
     // adding x-axis title
     const xlabel = svg.selectAll('.xaxis')
-      .data([{xlabelx: (plotWidth / 2),
+      .data([{xlabelx: (plotWidth * 3/7),
               xlabely: plotHeight + (1.25 * margin.bottom),
               anchor: 'middle'}])
       .attr('transform', `translate(${margin.left/2}, 0)`);
