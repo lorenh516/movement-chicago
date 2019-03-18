@@ -112,6 +112,42 @@ function plotChi(data) {
     .text('Data Source: U.S. Census Bureau, ACS 5-Year Tables')
     .attr('dy', '0.5em');
 
+    // adding title
+    // Got ideas for title placement from d3noob.org
+    // http://www.d3noob.org/2013/01/adding-title-to-your-d3js-graph.html
+    const titleGroup = svg.append("g")
+      .attr('id', 'titles')
+
+    const title = titleGroup.selectAll('.title')
+      .data([{x: (plotWidth * 7/12),
+              y: (margin.top / 4),
+              anchor: 'middle'}])
+
+    title.enter()
+      .append('text')
+      // center title in plot width
+      .attr('class', 'title')
+      .attr('x', d => d.x)
+      // place title a third of the way down in the margin
+      .attr('y', d=> d.y)
+      .attr('text-anchor', d => d.anchor)
+      .text('Correlation exists between race and gentrification indicators');
+
+    // adding subtitle
+    const subtitle = titleGroup.selectAll('.subtitle')
+      .data([{x: (plotWidth * 7/12),
+              y: (margin.top /2),
+              anchor: 'middle'}])
+
+    subtitle.enter()
+      .append('text')
+      .attr('class', 'subtitle')
+      // center title in plot width
+      .attr('x',  d=> d.x)
+      // place subtitle two-thirds of the way down in the margin
+      .attr('y',  d=> d.y)
+      .attr('text-anchor', d => d.anchor)
+      .text('Change in median income in Chicago neighborhoods varies by race');
   // define color scale
   // const popColors = d3.scaleLinear()
   //   .domain([incomeDomain.min, incomeDomain.max])
@@ -170,8 +206,8 @@ function plotChi(data) {
       .append("svg")
       // .attr("width", 150)
       // .attr("height", 150)
-      .attr("width", '95%')
-      .attr("height", '30%')
+      .attr("width", '100%')
+      .attr("height", '50%')
       // .attr('viewBox','0 0 '+Math.min(width,height)+' '+Math.min(width,height))
       .attr('preserveAspectRatio','xMinYMin')
       // .attr("transform", `translate(0,${margin.top * 1/8})`)

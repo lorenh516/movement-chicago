@@ -251,9 +251,20 @@ label::before {
   background-color: black;
   bottom:0;
   position: absolute;
-  data-style-padding: 10;
+  data-style-padding: 2%;
 }
 
 .caption{
+  font-size: 0.75em;
+}
+
+
+.title {
+  font-family: "Ledger";
+  font-size: 0.9em
+}
+
+.subtitle {
+  font-family: "Ledger";
   font-size: 0.75em;
 }
