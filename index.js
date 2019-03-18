@@ -59,7 +59,7 @@ function plotChi(data) {
   var svg = d3.select('.chart-container')
     .append("svg")
     .attr('id', 'chart-area')
-    .attr('width', width)
+    .attr('width', '100%')
     .attr('height', height);
 
   // initialize axis scales for scatterplot
