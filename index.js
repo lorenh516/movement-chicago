@@ -31,10 +31,10 @@ function plotChi(data) {
   const [communityShapes, tractData, tractDetails] = data;
 
   // define svg dimensions
-  const height = 400;
-  const width = 500;
+  const height = screen.height * 0.45;
+  const width = screen.width * 0.35;
 
-  const margin = {top: 50, left: 75, right: 0, bottom: 50};
+  const margin = {top: (screen.height * 0.05), left: (screen.width * 0.05), right: 0, bottom: (screen.height * 0.05)};
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.bottom - margin.top;
 
@@ -183,7 +183,7 @@ function plotChi(data) {
 
     // add y-axis title, which does not change
     const ylabel = svg.selectAll('.yaxis')
-      .data([{ylabely: margin.left * 0.10,
+      .data([{ylabely: -plotHeight * 0.0075,
               ylabelx: -plotHeight * 4/7,
               anchor: 'middle'}])
       .attr('transform', `translate(${margin.left}, 0)`);
@@ -264,9 +264,10 @@ function plotChi(data) {
            {'group': 'White', 'value': 'off'},
            {'group': 'Asian', 'value': 'off'}])
     .enter()
+    .append('div')
     .append('label')
       .attr('for', d => d.group)
-      .classed('radio-label', d => d )
+      .attr('class', 'radio-label')
       .text(d => d.group)
         .classed('predom-black', d => d.group === 'Black')
         .classed('predom-asian', d => d.group === 'Asian')
@@ -476,15 +477,36 @@ function plotChi(data) {
            tractMarker.on('mouseover', function (e) {
                this.openTooltip();
 
+               d3.selectAll('.circle.active')
+                 .classed('active', false)
+               d3.selectAll('.map-dots.active')
+                 .classed('active', false)
+
                classGEOID = `tract-${feature.properties.GEOID}`;
                d3.selectAll(`.${classGEOID}`).classed('active', true);
 
                // make non-focus circles/ map dots more transparent
                // Adapted from: https://stackoverflow.com/questions/45616574/d3-selectall-multiple-classes-and-or-or
                var focusCircle = this;
-               d3.selectAll('.circle,.map-dots').classed('inactive',function () {
+               d3.selectAll('.map-dots').classed('inactive',function () {
                    return (this === focusCircle) ? false:true;
                });
+
+
+               // d3.select(this).classed('active', d => d);
+               // classGEOID = `tract-${d.properties.GEOID}`;
+               // d3.selectAll(`.${classGEOID}`).classed('active', true);
+               //
+               // // make non-focus circles/ map dots more transparent
+               // // Adapted from: https://stackoverflow.com/questions/45616574/d3-selectall-multiple-classes-and-or-or
+               // var focusCircle = this;
+               // d3.selectAll('.circle,.map-dots').classed('inactive',function () {
+               //     return (this === focusCircle) ? false:true;
+               // });
+
+
+
+
 
            });
 
@@ -495,7 +517,7 @@ function plotChi(data) {
              classGEOID = `tract-${feature.properties.GEOID}`;
              d3.selectAll(`.${classGEOID}`).classed('active', false);
 
-             allDots = d3.selectAll('.circle,.map-dots')
+             allDots = d3.selectAll('.map-dots')
              allDots.classed('inactive', false);
 
           });
@@ -652,8 +674,8 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
 
     // adding x-axis title
     const xlabel = svg.selectAll('.xaxis')
-      .data([{xlabelx: (plotWidth) / 2,
-              xlabely: plotHeight + margin.bottom,
+      .data([{xlabelx: (plotWidth / 2) + margin.left,
+              xlabely: plotHeight + (1.25 * margin.bottom),
               anchor: 'middle'}])
       .attr('transform', `translate(${margin.left/2}, 0)`);
 

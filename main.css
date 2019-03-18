@@ -51,9 +51,15 @@ html, body {
 
 }
 
+.map-filter {
+  display: flex;
+  flex-direction: row;
+}
+
 .filter-radio {
   font-size: 2em;
-  margin: 0.15em 0.5em 0 0.25em;
+  margin: 0.15em 0.5em 0.5em 0.25em;
+
 }
 
 .filters-container {
@@ -61,7 +67,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  left: 5em;
+  /* left: 5em; */
 }
 
 .interactive-container {
@@ -99,7 +105,8 @@ html, body {
 }
 
 .map-legend-cont {
-  left: 1em;
+  left: 0.02%;
+  right: 0.0025%;
   width: 15%
   display: flex;
   z-index: 20000;
@@ -115,10 +122,10 @@ html, body {
 .chart-container {
   display: flex;
   flex-direction: row;
-  right: 2em;
+  right: 0.05%;
   height: inherit;
   position: absolute;
-  width: 40%;
+  width: 35%;
   font-family: "Roboto", sans-serif;
 }
 
@@ -212,6 +219,7 @@ label::before {
   stroke-width: 3;
   opacity: 1;
   stroke-opacity: 1;
+  z-index: 10000
 }
 
 .circle.inactive,
@@ -227,17 +235,14 @@ label::before {
   color: #edb834;
   /* stroke: #810000; */
   /* fillColor: #edb834; */
-  stroke-width: 3;
   opacity: 1;
   stroke-opacity: 1;
-  z-index: 999;
-  zIndexOffset: 999;
-  ForceZIndex: 999;
+  z-index: 10000
 }
 
 .map-dots.active-hold {
   stroke: #fff;
-  stroke-width: 2;
+  stroke-width: 1.5;
 }
 
 .colorLegend {
