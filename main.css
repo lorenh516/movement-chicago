@@ -76,7 +76,7 @@ html, body {
 .chart-div-cont {
   display: flex;
   height: 100%;
-  width: 100%;
+  width: 90%;
 }
 
 .tooltip-container {
@@ -92,20 +92,31 @@ html, body {
 .map-container {
     display: flex;
     justify-content: space-around;
-    left: 4em;
-    /* padding: 0 0 0 1em; */
+    left: 14em;
     position:absolute;
-    width: 50%;
-    height: 90%;
+    width: 35%;
+    height: 80%;
+}
+
+.map-legend-cont {
+  left: 1em;
+  width: 15%
+  display: flex;
+  z-index: 20000;
+  position: relative;
+  bottom:0;
+}
+
+#map-legend {
+  background-color: #f1f0e8;
+  border-radius: 0.35em;
 }
 
 .chart-container {
-  /* top: 10em; */
   display: flex;
   flex-direction: row;
   right: 2em;
   height: inherit;
-  /* justify-content: flex-end; */
   position: absolute;
   width: 40%;
   font-family: "Roboto", sans-serif;
@@ -174,12 +185,9 @@ html, body {
   color: #a8a8a8
 }
 
-/* .text-centered {
-  align: center;
-} */
 
 .map-dots {
-  z-index: 999;
+  z-index: 10000;
 }
 
 /* Clarity on AMcN '::after' suggestion from
@@ -209,27 +217,16 @@ label::before {
 .circle.inactive,
 .map-dots.inactive {
   opacity: 0.35;
-  stroke-opacity: 0.35;
+  stroke-opacity: 0.5;
 }
-
-/* .map-dots:hover {
-  color: #810000;
-  stroke: #810000;
-  fill: #edb834;
-  fillColor: #edb834;
-  stroke-width: 3;
-  opacity: 1;
-  stroke-opacity: 1;
-  z-index: 999;
-} */
 
 .map-dots.leaflet-interactive:hover,
 .map-dots.active,
 .map-dots.active-hold {
 /* .map-dots.active-hold  */
   color: #edb834;
-  stroke: #810000;
-  fillColor: #edb834;
+  /* stroke: #810000; */
+  /* fillColor: #edb834; */
   stroke-width: 3;
   opacity: 1;
   stroke-opacity: 1;
@@ -238,7 +235,24 @@ label::before {
   ForceZIndex: 999;
 }
 
+.map-dots.active-hold {
+  stroke: #fff;
+  stroke-width: 2;
+}
 
+.colorLegend {
+  font-size: 0.75em;
+  font-family: "Roboto";
+}
+
+
+.colorLegend {
+  z-index: 8000;
+  background-color: black;
+  bottom:0;
+  position: absolute;
+  data-style-padding: 10;
+}
 
 .caption{
   font-size: 0.75em;

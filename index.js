@@ -117,7 +117,13 @@ function plotChi(data) {
   //   .domain([incomeDomain.min, incomeDomain.max])
   //   .range(['#326d3c','#467e4d','#5b905f','#72a170','#8ab280','#a7c28d','#edc876']);
 
-  const popColors = d3.scaleSequential(d3.interpolateYlOrBr).domain([incomeDomain.min, incomeDomain.max])
+  // const popColors2 = d3.scaleSequential(d3.interpolateYlOrBr).domain([incomeDomain.min, 50000, 100000, 150000, 200000, incomeDomain.max])
+  // const popColors = d3.scaleLinear().domain([incomeDomain.min, 50000, 100000, 150000, 200000, incomeDomain.max]).range(['#FFFBE7', '#F9A976', '#dc5b21', '#810000'])
+  const popColors = d3.scaleThreshold()
+                    .domain([25000, 50000, 100000, 150000, 200000, incomeDomain.max])
+                    .range(['#fff7cd','#fed199','#f1a974','#c35d42','#a83733']);
+
+  // .range(['#FFFBE7', '#F9A976', '#dc5b21', '#810000'])
 
   // map populations to data properties
   // const propertyMapping = {
@@ -159,6 +165,40 @@ function plotChi(data) {
     // formatting axis tick text to match subtitle
     svg.selectAll('.tick > text')
       .style('font-family', "Roboto");
+
+    var mapSVG = d3.select('.map-legend-cont')
+      .append("svg")
+      // .attr("width", 150)
+      // .attr("height", 150)
+      .attr("width", '95%')
+      .attr("height", '30%')
+      // .attr('viewBox','0 0 '+Math.min(width,height)+' '+Math.min(width,height))
+      .attr('preserveAspectRatio','xMinYMin')
+      // .attr("transform", `translate(0,${margin.top * 1/8})`)
+      .attr('id', 'map-legend');
+
+    mapSVG.append("g")
+    .attr("class", "colorLegend")
+    // .attr("transform", `translate(${Math.min(width,height) * 1.1}, ${Math.min(width,height) * 5/7})`);
+    .attr("transform", `translate(10,${margin.top/2})`);
+
+  var mapLegend = d3.legendColor()
+    // .labelFormat(d3.format(",r"))
+    .labels(['0 - 24,999',
+             '25,000 - 49,999',
+             '50,000 - 99,999',
+             '100,000 - 149,99',
+             '150,000 - 199,999',
+             '200,000+'])
+    // .useClass(true)
+    .title("Tract Median Income")
+    .titleWidth(200)
+    .scale(popColors);
+    // .shapeWidth(25)
+    // .orient('horizontal');
+
+  mapSVG.select(".colorLegend")
+    .call(mapLegend);
 
 
     // add tooltips
@@ -243,10 +283,22 @@ function plotChi(data) {
 
   };
 
+  function numCommas(num)
+    {
+      return (num === null) ? null: num.toString().split(".")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      // var num_parts = ;
+      // return num_parts[0]
+    }
+
 
 
   function makeMap(communityShapes, tractDetails, rScale, popColors, propertyMapping) {
     // initiate scale domains
+    var home = {
+      lat: 41.8400,
+      lng: -87.7000,
+      zoom: 10
+    }
 
     // initiate map object
     var mymap = L.map('map', {
@@ -254,6 +306,7 @@ function plotChi(data) {
       renderer: L.svg()
     })
     .setView(new L.LatLng(41.8400, -87.7000), 10);
+
 
     // add Mapbox layer
     var aToken = 'pk.eyJ1IjoibGhpbmtzb24iLCJhIjoiY2pzcW52ZnoxMDFyejQ0cGRtZDRtMWppNSJ9.jIRwyua0hfpSpvwjxZcZkQ'; //public key
@@ -264,6 +317,12 @@ function plotChi(data) {
       id: 'mapbox.light',
       accessToken: aToken
   }).addTo(mymap);
+
+  var homeReturn = L.easyButton('<img src="home.png" alt="Return to original zoom" width="12" height="12"">', function(btn, map) {
+    map.setView([home.lat, home.lng], home.zoom);
+  });
+
+  homeReturn.addTo(mymap)
 
   // plot Chicago community area polygons as a base layer
   var communityPolys = new L.geoJSON(communityShapes, {
@@ -356,8 +415,8 @@ function plotChi(data) {
          if (feature.geometry.type == 'Polygon' && feature.properties && feature.properties[property]) {
            var bounds = layer.getBounds();
            var center = bounds.getCenter();
-           tractMarker = L.circleMarker(center,{
-           // L.circleMarker([feature.properties.lat, feature.properties.long],{
+           // tractMarker = L.circleMarker(center,{
+           tractMarker = L.circleMarker([feature.properties.lat, feature.properties.long],{
              radius: (Number(feature.properties[property]) === 0) ? 0:radiusScale(feature.properties[property]),
              color: colorScale(feature.properties.medianIncome),
              // color: tractColors[feature.properties.predominant_race],
@@ -370,7 +429,7 @@ function plotChi(data) {
              pane:'mapDots',
              className: `tract-${feature.properties.GEOID} map-dots`
            })
-           .bindTooltip(`<b>Community Area:</b> ${feature.properties.community}<br><b>Total Population:</b> ${feature.properties.population}<br><b>Group Size:</b> ${feature.properties[property]} (${(100 * (feature.properties[property]/feature.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${feature.properties.medianIncome}<br><b>Income Change:</b> ${(feature.properties.fullPeriodChange/(feature.properties.fullPeriodChange+feature.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - feature.properties.white_pct)).toFixed(2)}%`,
+           .bindTooltip(`<b>Community Area:</b> ${feature.properties.community}<br><b>Total Population:</b> ${numCommas(feature.properties.population)}<br><b>Group Size:</b> ${numCommas(feature.properties[property])} (${(100 * (feature.properties[property]/feature.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${numCommas(feature.properties.medianIncome)}<br><b>Income Change:</b> ${(feature.properties.fullPeriodChange/(feature.properties.fullPeriodChange+feature.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - feature.properties.white_pct)).toFixed(2)}%`,
              {maxWidth: 150,
               minWidth: 50,
               maxHeight: 150,
@@ -475,7 +534,8 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
       // d3.selectAll(`.${classGEOID}`).classed('active', true);
 
       tooltip
-        .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${d.properties.population}<br><b>Group Size:</b> ${d.properties[property]} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${d.properties.medianIncome}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - d.properties.white_pct)).toFixed(2)}%`)
+        .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${numCommas(d.properties.population)}<br><b>Group Size:</b> ${numCommas(d.properties[property])} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${numCommas(d.properties.medianIncome)}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 -d.properties.white_pct)).toFixed(2)}%`)
+        // .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${d.properties.population}<br><b>Group Size:</b> ${d.properties[property]} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${d.properties.medianIncome}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - d.properties.white_pct)).toFixed(2)}%`)
         .style('opacity', 0.85)
         // .style('color', populationMapping[property]['color'])
         .style('left', `${d3.mouse(this)[0]}px`)

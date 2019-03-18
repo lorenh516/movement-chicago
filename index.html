@@ -14,6 +14,9 @@
       integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
       crossorigin=""></script>
   <script src="./d3/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
   <link rel= "stylesheet" type="text/css"  href="main.css">
 </head>
 <body>
@@ -26,9 +29,12 @@
       <div class="button-container"></div>
     </div>
     <div class="interactive-container">
+      <div class="map-legend-cont"></div>
+      
       <div class="chart-div-cont">
         <div class="map-container" id="map"></div>
       </div>
+
       <div class="chart-div-cont second-one">
         <svg class="chart-container" id="chart"></svg>
       </div>

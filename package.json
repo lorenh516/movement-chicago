@@ -12,6 +12,7 @@
     "d3-svg-legend": "^2.25.6",
     "eslint": "^3.13.1",
     "eslint-config-uber-es2015": "^3.0.1",
+    "leaflet-easybutton": "^2.4.0",
     "live-server": "^0.7"
   },
   "author": "",
