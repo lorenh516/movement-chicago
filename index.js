@@ -99,7 +99,7 @@ function plotChi(data) {
     .range([2, 4, 6, 8]);
 
   const source = svg.selectAll('.caption')
-    .data([{x: plotWidth - margin.left - margin.right,
+    .data([{x: plotWidth - (1.75 * margin.left) - margin.right,
             y: plotHeight + (1.5 * margin.bottom),
             anchor: 'middle'}])
 
@@ -119,7 +119,7 @@ function plotChi(data) {
       .attr('id', 'titles')
 
     const title = titleGroup.selectAll('.title')
-      .data([{x: (plotWidth * 7/12),
+      .data([{x: (plotWidth /2),
               y: (margin.top / 4),
               anchor: 'middle'}])
 
@@ -135,7 +135,7 @@ function plotChi(data) {
 
     // adding subtitle
     const subtitle = titleGroup.selectAll('.subtitle')
-      .data([{x: (plotWidth * 7/12),
+      .data([{x: (plotWidth/ 2),
               y: (margin.top /2),
               anchor: 'middle'}])
 
@@ -207,7 +207,7 @@ function plotChi(data) {
       // .attr("width", 150)
       // .attr("height", 150)
       .attr("width", '100%')
-      .attr("height", '50%')
+      .attr("height", '30%')
       // .attr('viewBox','0 0 '+Math.min(width,height)+' '+Math.min(width,height))
       .attr('preserveAspectRatio','xMinYMin')
       // .attr("transform", `translate(0,${margin.top * 1/8})`)
@@ -264,7 +264,10 @@ function plotChi(data) {
            {'group': 'White', 'value': 'off'},
            {'group': 'Asian', 'value': 'off'}])
     .enter()
-    .append('div')
+    .append('div')//flex this guy
+    // .append('div')
+    // figure out how to make anotoher div that's a sibling of label (google)
+    // make this sibling div contain the dot
     .append('label')
       .attr('for', d => d.group)
       .attr('class', 'radio-label')
@@ -459,7 +462,7 @@ function plotChi(data) {
              // color: tractColors[feature.properties.predominant_race],
              weight: 0.75,
              opacity: 1,
-             fillOpacity: 0.85,
+             fillOpacity: 0.65,
              ZIndex: 600,
              // learned where to pass custom panes from GIS Stack Exchange:
              // https://gis.stackexchange.com/questions/181870/draw-l-circle-in-a-custom-pane
@@ -674,7 +677,7 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
 
     // adding x-axis title
     const xlabel = svg.selectAll('.xaxis')
-      .data([{xlabelx: (plotWidth / 2) + margin.left,
+      .data([{xlabelx: (plotWidth / 2),
               xlabely: plotHeight + (1.25 * margin.bottom),
               anchor: 'middle'}])
       .attr('transform', `translate(${margin.left/2}, 0)`);
