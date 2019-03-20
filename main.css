@@ -1,6 +1,6 @@
 body {
     align-items: center;
-    background-color: #fffbe6;
+    background-color: #fffdf7;
     display: flex;
     flex-direction: column;
     font-family: "Ledger";
@@ -284,10 +284,13 @@ label::before {
 }
 
 .footer {
+  display: flex;
   font-size: 0.75em;
   align: center;
-  margin-bottom: 0;
+  align-items: center;
+  justify-content: center;
   margin-top: 0;
+  margin-bottom: 0.5em;
 }
 
 .title {

@@ -43,13 +43,11 @@ function plotChi(data) {
     feature => {
     return feature.properties;
   }), 'whitePop');
-  console.log(wPop.max);
 
   const aPop = computeDomain(tractDetails.features.map(
     feature => {
     return feature.properties;
   }), 'asianPop');
-  console.log(aPop.min);
 
   const incomeDomain = computeDomain(tractDetails.features.map(
     feature => {
@@ -94,15 +92,6 @@ function plotChi(data) {
   // define group for scatterplot circles
   var plotGroup = svg.append("g")
     .attr('id', 'scatterplot')
-
-  // define scale for scattered and map radii
-  // const rScale = d3.scaleQuantile()
-  //   .domain([aPop.min, wPop.max])
-  //   .range([2, 4, 6, 8]);
-
-  // const rScale = d3.scaleLinear()
-  //   .domain([aPop.min, wPop.max])
-  //   .range([2, 15]);
 
   const rScale = d3.scaleSqrt()
     .domain([aPop.min, wPop.max])
@@ -220,7 +209,7 @@ function plotChi(data) {
 
     var chartSizeLegend = d3.legendSize()
       .scale(rScale)
-      .labelFormat(d3.format(",d"))
+      .labelFormat(d3.format(".2s"))
       .shape('circle')
       .title("Group Population in Tract")
       .titleWidth(200)
@@ -243,23 +232,6 @@ function plotChi(data) {
     mapSVG.append("g")
     .attr("class", "colorLegend")
     .attr("transform", `translate(10,${margin.top/2})`);
-
-  var mapLegend = d3.legendColor()
-    .labels(['0 - 24,999',
-             '25,000 - 49,999',
-             '50,000 - 99,999',
-             '100,000 - 149,99',
-             '150,000 - 199,999',
-             '200,000+'])
-    // .useClass(true)
-    .title("Tract Median Income")
-    .titleWidth(200)
-    .scale(popColors);
-    // .shapeWidth(25)
-    // .orient('horizontal');
-
-  mapSVG.select(".colorLegend")
-    .call(mapLegend);
 
 
     // add tooltips
@@ -330,7 +302,7 @@ function plotChi(data) {
   buttonLookup['2008-2012'] = 2012;
   buttonLookup['2013-2017'] = 2017;
 
-  const mapUpdate = makeMap(communityShapes, tractDetails, rScale, popColors, propertyMapping);
+  const mapUpdate = makeMap(communityShapes, tractDetails, rScale, popColors, propertyMapping, mapSVG);
 
   buttons = d3.select('.button-container')
     .selectAll('button')
@@ -345,7 +317,7 @@ function plotChi(data) {
         .classed('clicked', false)
       d3.select(this).classed('clicked', d => d)
       mapUpdate(currentYear, mapProperty);
-      updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear);
+      updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, mapProperty, margin, plotHeight, plotWidth, currentYear, tooltip);
     });
 
   // display earlier time period (2008-2012) and Latinx population map
@@ -363,7 +335,7 @@ function plotChi(data) {
 
 
 
-  function makeMap(communityShapes, tractDetails, rScale, popColors, propertyMapping) {
+  function makeMap(communityShapes, tractDetails, rScale, popColors, propertyMapping, mapSVG) {
     // initiate scale domains
     var home = {
       lat: 41.8400,
@@ -417,7 +389,7 @@ function plotChi(data) {
     var centerpointlayer = new L.LayerGroup();
     var tracts = new L.LayerGroup();
 
-    return function updateMap(currentYear, property, radiusScale=rScale, colorScale=popColors, map=mymap, colnames=propertyMapping, yearLayers) {
+    return function updateMap(currentYear, property, radiusScale=rScale, colorScale=popColors, map=mymap, colnames=propertyMapping, yearLayers, legendsvg=mapSVG) {
 
       const tractColors = {
         "Latinx": "#6d7d53",
@@ -427,12 +399,12 @@ function plotChi(data) {
       }
 
       // add census tract and population circle layers
-      addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts)
+      addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts, mapSVG)
       };
 
     };
 
-    function addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts) {
+    function addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts, mapSVG) {
 
       // Attribution for layer removal on update: Leaflet documentation on Layers
       // https://leafletjs.com/reference-1.4.0.html#layer
@@ -543,6 +515,25 @@ function plotChi(data) {
 
       // add population circle markers to map
       centerpointlayer.addTo(map);
+
+      var mapLegend = d3.legendColor()
+        // .labelFormat(d3.format(".2s"))
+        .labels(['0 to 24k',
+                 '25K to 49K',
+                 '50K to 99K',
+                 '100K to 149K',
+                 '150K to 199K',
+                 '200K+'])
+        // .useClass(true)
+        .title("Tract Median Income")
+        .titleWidth(200)
+        .scale(colorScale);
+        // .shapeWidth(25)
+        // .orient('horizontal');
+
+      mapSVG.select(".colorLegend")
+        .call(mapLegend);
+
 
       };
 
