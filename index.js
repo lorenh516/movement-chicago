@@ -32,9 +32,9 @@ function plotChi(data) {
 
   // define svg dimensions
   const height = screen.height * 0.45;
-  const width = screen.width * 0.35;
+  const width = screen.width * 0.45;
 
-  const margin = {top: (screen.height * 0.05), left: (screen.width * 0.05), right: 0, bottom: (screen.height * 0.05)};
+  const margin = {top: (screen.height * 0.05), left: (screen.width * 0.05), right: 0, bottom: (screen.height * 0.06)};
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.bottom - margin.top;
 
@@ -59,9 +59,10 @@ function plotChi(data) {
   var svg = d3.select('.chart-container')
     .append("svg")
     .attr('id', 'chart-area')
-    .attr('width', '100%')
-    .attr('height', height);
+    .attr('width', '80%')
+    .attr('height', '100%');
 
+  console.log(plotWidth);
   // initialize axis scales for scatterplot
   const yScale = d3.scaleLinear()
     .domain([incomeDomain.max, 0])
@@ -70,7 +71,7 @@ function plotChi(data) {
 
   const xScale = d3.scaleLinear()
     .domain([0, wPop.max])
-    .range([margin.left, plotWidth])
+    .range([margin.left, width])
     .nice();
 
   // add Axes to scatterplot
@@ -98,8 +99,8 @@ function plotChi(data) {
     .range([2, 8]).nice();
 
   const source = svg.selectAll('.caption')
-    .data([{x: plotWidth - (1.75 * margin.left) - margin.right,
-            y: plotHeight + (1.5 * margin.bottom),
+    .data([{x: plotWidth - (margin.left * 3/4),
+            y: plotHeight + (1.3 * margin.bottom),
             anchor: 'middle'}])
 
   source.enter()
@@ -111,6 +112,20 @@ function plotChi(data) {
     .text('Data Source: U.S. Census Bureau, ACS 5-Year Tables')
     .attr('dy', '0.5em');
 
+  const note = svg.selectAll('.note')
+    .data([{x: plotWidth - (margin.left * 2),
+            y: plotHeight + (1.75 * margin.bottom),
+            anchor: 'middle'}])
+
+    note.enter()
+      .append('text')
+      .attr('class', 'caption')
+      .attr('x', d => d.x)
+      .attr('y', d => d.y)
+      .attr('text-anchor', d=> d.anchor)
+      .text('*Scatterplot and map share tract predominant race shading colors and population dot sizes.')
+      .attr('dy', '0.5em');
+
     // adding title
     // Got ideas for title placement from d3noob.org
     // http://www.d3noob.org/2013/01/adding-title-to-your-d3js-graph.html
@@ -118,8 +133,8 @@ function plotChi(data) {
       .attr('id', 'titles')
 
     const title = titleGroup.selectAll('.title')
-      .data([{x: (plotWidth /2),
-              y: (margin.top / 4),
+      .data([{x: margin.left + (plotWidth/2),
+              y: (margin.top / 3),
               anchor: 'middle'}])
 
     title.enter()
@@ -134,8 +149,8 @@ function plotChi(data) {
 
     // adding subtitle
     const subtitle = titleGroup.selectAll('.subtitle')
-      .data([{x: (plotWidth/ 2),
-              y: (margin.top /2),
+      .data([{x: margin.left + (plotWidth/2),
+              y: (margin.top * 3/4),
               anchor: 'middle'}])
 
     subtitle.enter()
@@ -205,14 +220,18 @@ function plotChi(data) {
     // Adapted from example at https://d3-legend.susielu.com/#Size
     svg.append("g")
     .attr("class", "legendSize")
-    .attr("transform", `translate(${plotWidth * 2/3}, ${margin.top * 1.25})`);
+    .attr("transform", `translate(${plotWidth - margin.left}, ${margin.top * 1.25})`);
 
     var chartSizeLegend = d3.legendSize()
       .scale(rScale)
-      .labelFormat(d3.format(".2s"))
+      .labels(['0 to 2.49K',
+               '2.50K to 4.99K',
+               '5.00K to 7.49K',
+               '7.50K to 9.99K',
+               '10.00K+'])
       .shape('circle')
-      .title("Group Population in Tract")
-      .titleWidth(200)
+      .title("Group Population in Tract*")
+      .titleWidth(155)
       .shapePadding(5)
       .labelOffset(10);
 
@@ -225,7 +244,7 @@ function plotChi(data) {
     var mapSVG = d3.select('.map-legend-cont')
       .append("svg")
       .attr("width", '100%')
-      .attr("height", '30%')
+      .attr("height", '100%')
       .attr('preserveAspectRatio','xMinYMin')
       .attr('id', 'map-legend');
 
@@ -517,19 +536,18 @@ function plotChi(data) {
       centerpointlayer.addTo(map);
 
       var mapLegend = d3.legendColor()
-        // .labelFormat(d3.format(".2s"))
         .labels(['0 to 24k',
                  '25K to 49K',
                  '50K to 99K',
                  '100K to 149K',
                  '150K to 199K',
                  '200K+'])
-        // .useClass(true)
         .title("Tract Median Income")
         .titleWidth(200)
-        .scale(colorScale);
-        // .shapeWidth(25)
-        // .orient('horizontal');
+        .scale(colorScale)
+        .shapeWidth('30')
+        .shapePadding(50)
+        .orient('horizontal');
 
       mapSVG.select(".colorLegend")
         .call(mapLegend);
@@ -659,8 +677,8 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
 
     // adding x-axis title
     const xlabel = svg.selectAll('.xaxis')
-      .data([{xlabelx: (plotWidth * 3/7),
-              xlabely: plotHeight + (1.25 * margin.bottom),
+      .data([{xlabelx: margin.left + (plotWidth/2),
+              xlabely: plotHeight + (1.05 * margin.bottom),
               anchor: 'middle'}])
       .attr('transform', `translate(${margin.left/2}, 0)`);
 
