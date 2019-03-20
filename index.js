@@ -272,16 +272,7 @@ function plotChi(data) {
       .attr("class", "tooltip")
       .attr("id", "tooltip-inner");
 
-  //
-  // var radioSVG = d3.selectAll(".map-filter")
-  //                   .append('svg')
-  //                   .attr("id", "radio-svg")
-  //                   .attr('width', '100%')
-  //
-  // radioSVG.append('g')
-  //   .attr('id', 'population-filters')
 
-  // SAVE JOIN FOR INPUTS
   clean = d3.selectAll(".filter-radio")
       .selectAll('input')
       .data([{'group': 'Latinx', 'value': 'off'},
@@ -329,9 +320,6 @@ function plotChi(data) {
       mapUpdate(currentYear, mapProperty);
     });
 
-    // radioSVG.select("g.parent").data(['a','b'])
-    // .insert("div", "label")
-    //  .text(d => "⬤");
 
   // display Latinx population scatterplot on page load
   d3.select('#Latinx-radio')
@@ -366,11 +354,11 @@ function plotChi(data) {
 
   };
 
+  // Adapted from SO method for adding commas to strings in JS:
+  // https://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
   function numCommas(num)
     {
       return (num === null) ? null: num.toString().split(".")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-      // var num_parts = ;
-      // return num_parts[0]
     }
 
 
@@ -428,8 +416,6 @@ function plotChi(data) {
     // initiate layer groups for overlay layers
     var centerpointlayer = new L.LayerGroup();
     var tracts = new L.LayerGroup();
-    // var centerpointlayer = new L.FeatureGroup();
-    // var tracts = new L.FeatureGroup();
 
     return function updateMap(currentYear, property, radiusScale=rScale, colorScale=popColors, map=mymap, colnames=propertyMapping, yearLayers) {
 
@@ -444,24 +430,12 @@ function plotChi(data) {
       addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts)
       };
 
-      // map.eachLayer(function (layer) {
-      //   map.removeLayer(layer);
-      //   // layer.setOpacity(0);
-      // });
-      //
-      // tracts.eachLayer(function (layer) {
-      //   map.removeLayer(layer);
-      //   // layer.setOpacity(0);
-      // });
-
-
     };
 
     function addLayer(map, tractDetails, tractColors, currentYear, radiusScale, colorScale, property, centerpointlayer, tracts) {
 
       // Attribution for layer removal on update: Leaflet documentation on Layers
       // https://leafletjs.com/reference-1.4.0.html#layer
-
       centerpointlayer.clearLayers();
       tracts.clearLayers();
 
@@ -481,9 +455,6 @@ function plotChi(data) {
                 default: return {color: 'transparent'};
             }
         },
-        // style: function(feature) { return {color: colorScale(feature.properties.medianIncome)};},
-        // color: feature => tractColors[feature.properties.predominant_race],
-        // style: function(feature) { return {color: tractColors[feature.properties.predominant_race]};},
         fillOpacity: 0.45,
         weight: 0.25,
         opacity: 0.5,
@@ -498,17 +469,14 @@ function plotChi(data) {
          if (feature.geometry.type == 'Polygon' && feature.properties && feature.properties[property]) {
            var bounds = layer.getBounds();
            var center = bounds.getCenter();
-           // tractMarker = L.circleMarker(center,{
-           tractMarker = L.circleMarker([feature.properties.lat, feature.properties.long],{
+           tractMarker = L.circleMarker(center,{
              radius: (Number(feature.properties[property]) === 0) ? 0:radiusScale(feature.properties[property]),
-             // radius: radiusScale(feature.properties[property]),
              color: colorScale(feature.properties.medianIncome),
-             // color: tractColors[feature.properties.predominant_race],
              weight: 0.75,
              opacity: 1,
              fillOpacity: 0.65,
              ZIndex: 600,
-             // learned where to pass custom panes from GIS Stack Exchange:
+             // learned how to pass custom panes from GIS Stack Exchange:
              // https://gis.stackexchange.com/questions/181870/draw-l-circle-in-a-custom-pane
              pane:'mapDots',
              className: `tract-${feature.properties.GEOID} map-dots`
@@ -539,22 +507,6 @@ function plotChi(data) {
                    return (this === focusCircle) ? false:true;
                });
 
-
-               // d3.select(this).classed('active', d => d);
-               // classGEOID = `tract-${d.properties.GEOID}`;
-               // d3.selectAll(`.${classGEOID}`).classed('active', true);
-               //
-               // // make non-focus circles/ map dots more transparent
-               // // Adapted from: https://stackoverflow.com/questions/45616574/d3-selectall-multiple-classes-and-or-or
-               // var focusCircle = this;
-               // d3.selectAll('.circle,.map-dots').classed('inactive',function () {
-               //     return (this === focusCircle) ? false:true;
-               // });
-
-
-
-
-
            });
 
            tractMarker.on('mouseout', function (e) {
@@ -572,7 +524,6 @@ function plotChi(data) {
           tractMarker.on('click', function (e) {
 
             classGEOID = `tract-${feature.properties.GEOID}`;
-            // d3.selectAll(`.${classGEOID}`).classed('active-hold', false);
 
             selected = d3.selectAll(`.${classGEOID}`)
             selected.classed('active-hold', !selected.classed('active-hold'));
@@ -630,13 +581,6 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     }
 
     var mousemove = function(d) {
-      // d3.selectAll('.circle.active')
-      //   .classed('active', false)
-      // d3.selectAll('.map-dots.active')
-      //   .classed('active', false)
-      // d3.select(this).classed('active', d => d);
-      // classGEOID = `tract-${d.properties.GEOID}`;
-      // d3.selectAll(`.${classGEOID}`).classed('active', true);
 
       tooltip
         .html(`<b>Community Area:</b> ${d.properties.community}<br><b>Total Population:</b> ${numCommas(d.properties.population)}<br><b>Group Size:</b> ${numCommas(d.properties[property])} (${(100 * (d.properties[property]/d.properties.population)).toFixed(2)}%)<br><b>Median Income:</b> ${numCommas(d.properties.medianIncome)}<br><b>Income Change:</b> ${(d.properties.fullPeriodChange/(d.properties.fullPeriodChange+d.properties.medianIncome)).toFixed(2)}%<br><b>Non-White:</b> ${(100*(1 - d.properties.white_pct)).toFixed(2)}%`)
@@ -665,9 +609,8 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     }
 
 
-    // highlight/ remove highlight on a circle with a click
+    // highlight/ remove highlight from a circle with a click
     var mouseclick = function(d) {
-      // selected = d3.select(this)
       // Attribution for class-flipping:
       // https://jaketrent.com/post/d3-class-operations/
       classGEOID = `tract-${d.properties.GEOID}`;
@@ -706,7 +649,6 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .on("mousemove", mousemove)
     .on("mouseleave", mouseleave)
     .on("click", mouseclick);
-    // .attr('cx', d => xScale(d.properties.whitePop))
 
 
     scattered
@@ -721,12 +663,8 @@ function updateChart(plotGroup, svg, tractDetails, xScale, yScale, rScale, prope
     .transition().duration(1000)
     .attr('cx', d => xScale(d.properties[property]))
     .attr('cy', d => yScale(d.properties.medianIncome))
-    // .attr('r', d => rScale(d.properties[property]));
     .attr('r', d => (Number(d.properties[property]) === 0) ? 0:rScale(d.properties[property]));
-    // .on("mouseenter", mouseenter)
-    // .on("mousemove", mousemove)
-    // .on("mouseleave", mouseleave)
-    // .on("click", mouseclick);
+
 
     // adding x-axis title
     const xlabel = svg.selectAll('.xaxis')
