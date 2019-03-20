@@ -115,6 +115,7 @@ html, body {
   display: flex;
   position: relative;
   bottom:0;
+  margin-left: 1em;
   height: 15%;
   align-items: center;
   justify-content: center;
@@ -213,7 +214,7 @@ html, body {
 https://www.w3schools.com/cssref/tryit.asp?filename=trycss_sel_after,
 adapted into my '::before' code */
 label::before {
-  content: "●";
+  content: "⬤";
   margin-right: 0.5em;
 }
 
@@ -229,8 +230,8 @@ label::before {
   /* Alex -- none of the colors that looked good with the scatterplot showed
   well on the map, and vice versa. I did do a lot of experimenting, but I like
   it best with two colors  */
-  stroke: #fff;
-  stroke-width: 1.5;
+  stroke: #edb834;
+  stroke-width: 2;
   opacity: 1;
   stroke-opacity: 1;
   z-index: 10000

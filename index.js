@@ -62,7 +62,6 @@ function plotChi(data) {
     .attr('width', '80%')
     .attr('height', '100%');
 
-  console.log(plotWidth);
   // initialize axis scales for scatterplot
   const yScale = d3.scaleLinear()
     .domain([incomeDomain.max, 0])
@@ -113,7 +112,7 @@ function plotChi(data) {
     .attr('dy', '0.5em');
 
   const note = svg.selectAll('.note')
-    .data([{x: plotWidth - (margin.left * 2),
+    .data([{x: plotWidth - (margin.left * 2.1),
             y: plotHeight + (1.75 * margin.bottom),
             anchor: 'middle'}])
 
@@ -271,12 +270,6 @@ function plotChi(data) {
              {'group': 'White', 'value': 'off'},
              {'group': 'Asian', 'value': 'off'}])
 
-    // TO DO: create this setup with D3
-    // <div class="seleceted">
-    //   <div></div> // height width = 10, border-radius: 100%
-    //   <button >LATINX</button>
-    // </div>
-
     d3.select('.map-filter')
       .selectAll('input')
       .data([{'group': 'Latinx', 'value': 'off'},
@@ -284,11 +277,6 @@ function plotChi(data) {
              {'group': 'White', 'value': 'off'},
              {'group': 'Asian', 'value': 'off'}])
     .enter()
-    // flex this guy
-    // .append('div')
-    // .append('div')
-    // figure out how to make anotoher div that's a sibling of label (google)
-    // make this sibling div contain the dot
     .append('label')
       .attr('for', d => d.group)
       .attr('class', 'radio-label')
